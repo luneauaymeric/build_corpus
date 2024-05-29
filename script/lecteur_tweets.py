@@ -134,7 +134,7 @@ if uploaded_files is not None:
 
 
     if create_txt :
-        print(selected_folder_path)
+        print(folder_path)
         new_df = gp.group_by_user_by_minute(df, number, minute_interval)
         new_df = new_df.loc[~(new_df["text"].isna())]
 
