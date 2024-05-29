@@ -1,7 +1,6 @@
 pandas
 streamlit
 matplotlib
-tkinter
 matplotlib.pyplot
 datetime
 grouping_post
