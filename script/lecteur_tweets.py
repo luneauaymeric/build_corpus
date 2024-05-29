@@ -126,7 +126,7 @@ if uploaded_files is not None:
     statut = downlaod_corpus.selectbox("statut", [x for x in df.columns])
     champ1 = downlaod_corpus.selectbox("champ 1", [x for x in df.columns])
     champ2 = downlaod_corpus.selectbox("champ 2", [x for x in df.columns])
-
+    folder_path = downlaod_corpus.text_input("Entrer l'adresse du dossier de récupération")
 
 
 
