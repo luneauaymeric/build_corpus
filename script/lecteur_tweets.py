@@ -67,7 +67,7 @@ else:
     path_in = None
 
 
-f_out = st.sidebar.text_input(label='Output Folder path: ',  value=dflt_fname)
+#f_out = st.sidebar.text_input(label='Output Folder path: ',  value=dflt_fname)
 
 if uploaded_files is not None:
     df = gp.df_processor(uploaded_files)
