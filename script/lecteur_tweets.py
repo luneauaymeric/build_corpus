@@ -128,6 +128,8 @@ if uploaded_files is not None:
     champ1 = downlaod_corpus.selectbox("champ 1", [x for x in df.columns])
     champ2 = downlaod_corpus.selectbox("champ 2", [x for x in df.columns])
 
+    f_out = downlaod_corpus.text_input(label='Output Folder path: ',  value=dflt_fname)
+
 
 
     create_txt = downlaod_corpus.form_submit_button('Télécharger un corpus Prospéro')
@@ -139,5 +141,5 @@ if uploaded_files is not None:
         new_df = new_df.loc[~(new_df["text"].isna())]
 
         #downlaod_corpus.write('You selected `%s`' % filename)
-        convert_csv_to_txt = convert.ParseCsv.write_prospero_files(new_df, save_dir=selected_folder_path)
+        convert_csv_to_txt = convert.ParseCsv.write_prospero_files(new_df, save_dir=f_out)
         #create_prc
