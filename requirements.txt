@@ -2,3 +2,9 @@ pandas
 streamlit
 matplotlib
 io
+tkinter
+matplotlib.pyplot
+datetime
+grouping_post
+visualisation
+convert
