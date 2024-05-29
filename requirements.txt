@@ -2,6 +2,3 @@ pandas
 streamlit
 matplotlib
 datetime
-grouping_post
-visualisation
-convert
