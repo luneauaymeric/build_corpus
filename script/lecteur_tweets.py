@@ -113,7 +113,7 @@ if uploaded_files is not None:
             #st.session_state.folder_path = selected_folder_path
 
 
-
+    f_out = st.sidebar.text_input(label='Output Folder path: ',  value=dflt_fname)
 
     downlaod_corpus = st.sidebar.form("Télécharger un corpus Prospéro")
     downlaod_corpus.write("Créer un corpus Prospéro")
@@ -128,7 +128,6 @@ if uploaded_files is not None:
     champ1 = downlaod_corpus.selectbox("champ 1", [x for x in df.columns])
     champ2 = downlaod_corpus.selectbox("champ 2", [x for x in df.columns])
 
-    f_out = downlaod_corpus.text_input(label='Output Folder path: ',  value=dflt_fname)
 
 
 
