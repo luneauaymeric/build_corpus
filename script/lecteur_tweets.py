@@ -51,7 +51,7 @@ def convert_df(df):
 #  Chargement du CSV contenant les tweets (un seul fichier à la fois)
 st.sidebar.title("Chargement d'un fichier CSV")
 uploaded_files = st.sidebar.file_uploader("Téléverser le fichier csv", accept_multiple_files=False)
-st.sidebar.write(uploaded_files)
+st.sidebar.write(uploaded_files.name)
 # selected_folder_path = st.session_state.get("folder_path", None)
 # folder_select_button = st.sidebar.button("Dossier de récupération du corpus")
 # if folder_select_button:
@@ -61,6 +61,11 @@ st.sidebar.write(uploaded_files)
 # if selected_folder_path:
 #     st.sidebar.write(selected_folder_path)
 
+if uploaded_files is not None:
+    path_in = uploaded_files.name
+    print(path_in)
+else:
+    path_in = None
 
 
 
