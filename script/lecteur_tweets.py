@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 import grouping_post as gp
 import visualisation
 import convert
-import streamlit as st
-import tkinter as tk
-from tkinter import filedialog
+#import streamlit as st
+#from tkinter import filedialog
 #import glob
 
 # Script inspired from https://github.com/emilienschultz/dstool
@@ -19,24 +18,24 @@ def topics(data,topic_column):
     list_topics = [x for x in d_topic[topic_column].unique()]
     return list_topics
 
-def select_folder():
-   root = tk.Tk()
-   root.withdraw()
-   folder_path = filedialog.askdirectory(master=root)
-   root.destroy()
-   return folder_path
-
-def save_csv(data):
-    root = tk.Tk()
-    root.withdraw()
-    files = [('csv', '*.csv')]
-    file = filedialog.asksaveasfile(filetypes = files, defaultextension = files)
-    #print(file)
-    #data.to_csv(file, index=False)
-    if file:
-        print(file)
-        data.to_csv(file, index=False)
-    root.destroy()
+# def select_folder():
+#    root = tk.Tk()
+#    root.withdraw()
+#    folder_path = filedialog.askdirectory(master=root)
+#    root.destroy()
+#    return folder_path
+#
+# def save_csv(data):
+#     root = tk.Tk()
+#     root.withdraw()
+#     files = [('csv', '*.csv')]
+#     file = filedialog.asksaveasfile(filetypes = files, defaultextension = files)
+#     #print(file)
+#     #data.to_csv(file, index=False)
+#     if file:
+#         print(file)
+#         data.to_csv(file, index=False)
+#     root.destroy()
     #return file
 
 
@@ -52,14 +51,14 @@ def convert_df(df):
 #  Chargement du CSV contenant les tweets (un seul fichier à la fois)
 st.sidebar.title("Chargement d'un fichier CSV")
 uploaded_files = st.sidebar.file_uploader("Téléverser le fichier csv", accept_multiple_files=False)
-selected_folder_path = st.session_state.get("folder_path", None)
-folder_select_button = st.sidebar.button("Dossier de récupération du corpus")
-if folder_select_button:
-    selected_folder_path = select_folder()
-    st.session_state.folder_path = selected_folder_path
-
-if selected_folder_path:
-    st.sidebar.write(selected_folder_path)
+# selected_folder_path = st.session_state.get("folder_path", None)
+# folder_select_button = st.sidebar.button("Dossier de récupération du corpus")
+# if folder_select_button:
+#     selected_folder_path = select_folder()
+#     st.session_state.folder_path = selected_folder_path
+#
+# if selected_folder_path:
+#     st.sidebar.write(selected_folder_path)
 
 
 
@@ -102,9 +101,9 @@ if uploaded_files is not None:
         csv = convert_df(new_df)
 
 
-        save_corpus_in_csv = st.sidebar.button("Sauvegarder CSV")
-        if save_corpus_in_csv:
-            selected_folder_path = save_csv(new_df)
+        # save_corpus_in_csv = st.sidebar.button("Sauvegarder CSV")
+        # if save_corpus_in_csv:
+        #     selected_folder_path = save_csv(new_df)
             #st.session_state.folder_path = selected_folder_path
 
 
