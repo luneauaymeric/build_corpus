@@ -209,9 +209,16 @@ class ParseCsv:
     #             self.articles[key]['source_type'] = 'unknown source'
     #             self.articles[key]['root'] = 'FACTIVA'
 
-    def write_prospero_files(self, save_dir, cleaning=False):
+    def write_prospero_files(self, save_dir, nom_support, type_support, cleaning=False):
+
         """for each article, write txt, csv and ctx in a given directory"""
         dict_date = {"10":"A", "11":"B", "12":"C"}
+
+        with open(f'{save_dir}/test.prc',"w",  encoding = 'latin-1') as prc_file: #on ouvre le fichier CTX
+            dic_elem = prc_file.write("""
+            projet0005\n
+            français\n""")
+
         for _, row in self.iterrows():
 
             jour = str(row["day"])
@@ -233,6 +240,8 @@ class ParseCsv:
                                  save_dir)
             path = os.path.join(save_dir, filepath + ".txt")
             print(path)
+
+
             auteur = str(row["user_screen_name"])
             title = f"Posts de {auteur}"
             with open(path, 'wb') as file:
@@ -242,6 +251,9 @@ class ParseCsv:
                 file.write(titulo.encode('utf8'))
                 file.write(ponto.encode('utf8'))
                 file.write(texto.encode('utf8'))
+            with open(f'{save_dir}/test.prc', 'a') as prc_file:
+                prc_file.write(f'{path}\n')
+
 
             #ed = f'\ ED: {row["ED"]}'
             #pg_se = f'PG: {row["PG"]} / SE: {row["SE"]} '.replace("\\", " ")
@@ -252,8 +264,8 @@ class ParseCsv:
                     "",
                     "",
                     date_ctx,
-                    "Test",
-                    "test",
+                    nom_support,
+                    type_support,
                     "",
                     "",
                     "",
@@ -268,6 +280,8 @@ class ParseCsv:
             path = os.path.join(save_dir, filepath + ".ctx")
             with open(path, 'wb') as file:
                 file.write(ctx)
+        with open(f'{save_dir}/test.prc', 'a') as prc_file:
+            prc_file.write(f'ENDFILE')
 
 
 if __name__ == "__main__":
