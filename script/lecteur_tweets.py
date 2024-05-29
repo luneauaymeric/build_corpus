@@ -139,5 +139,5 @@ if uploaded_files is not None:
         new_df = new_df.loc[~(new_df["text"].isna())]
 
         #downlaod_corpus.write('You selected `%s`' % filename)
-        convert_csv_to_txt = convert.ParseCsv.write_prospero_files(new_df, save_dir=f_out)
+        convert_csv_to_txt = convert.ParseCsv.write_prospero_files(new_df, save_dir=folder_path)
         #create_prc
