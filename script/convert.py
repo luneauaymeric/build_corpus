@@ -11,6 +11,8 @@ import random
 import datetime
 import csv
 import pandas as pd
+import zipfile
+import io
 
 # try:
 #     import cleaning
@@ -61,13 +63,13 @@ def format_date(date):
         return "00/00/0000"
 
 
-def file_name(date, prefix, save_dir):
+def file_name(date, prefix, save_dir, list_path_file):
     """return a name in Prospero style"""
     index, base = "A", 64
     date = "".join(reversed(date.split("/")))
     name = "%s%s%s" % (prefix, date, index)
     path = os.path.join(save_dir, name + ".txt")
-    while os.path.isfile(path):
+    while name in list_path_file:
         if ord(index[-1]) < 90:
             index = chr(ord(index[-1]) + 1)
         else:
@@ -208,80 +210,91 @@ class ParseCsv:
     #             self.articles[key]['support'] = article['media']
     #             self.articles[key]['source_type'] = 'unknown source'
     #             self.articles[key]['root'] = 'FACTIVA'
-
+    #@st.cache_data
     def write_prospero_files(self, save_dir, nom_support, type_support, cleaning=False):
 
         """for each article, write txt, csv and ctx in a given directory"""
         dict_date = {"10":"A", "11":"B", "12":"C"}
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+            dictio_elem = "/home/aymeric/corpus/0_dic/dic_elementaires/"
+            dictio_fic = "/home/aymeric/corpus/0_dic/Etre_fictif/EF_pesti_medialab.fic"
+            dictio_cat = "/home/aymeric/corpus/0_dic/Categories/Cat_pesti_medialab.CAT"
+            dictio_col = "/home/aymeric/corpus/0_DIC/COLLECTIONS/Coll_pesti_medialab.col"
+            prc_txt= ["projet0005", dictio_fic, dictio_cat, dictio_col, "français"]
 
-        with open(f'{save_dir}/test.prc',"w",  encoding = 'latin-1') as prc_file: #on ouvre le fichier CTX
-            dic_elem = prc_file.write("""
-            projet0005\n
-            français\n""")
+            list_path_file =[]
 
-        for _, row in self.iterrows():
+            for _, row in self.iterrows():
+                print(row)
 
-            jour = str(row["day"])
-            if len(jour) == 1:
-                jour_prospero = "0"+jour
-            else:
-                jour_prospero = jour
-            mois = str(row["month"])
-            if len(mois) == 1:
-                mois_prospero = str(mois)
-                mois= f"0{mois}"
-            else:
-                mois_prospero= dict_mois[str(mois)]
-            annee = str(row["year"])
-            date_prospero = "%s/%s/%s" % (jour_prospero, mois_prospero, annee[2:])
-            date_ctx = "%s/%s/%s" % (jour_prospero, mois, annee)
-            filepath = file_name(date_prospero,
-                                 "TWIT",
-                                 save_dir)
-            path = os.path.join(save_dir, filepath + ".txt")
-            print(path)
+                jour = str(row["day"])
+                if len(jour) == 1:
+                    jour_prospero = "0"+jour
+                else:
+                    jour_prospero = jour
+                mois = str(row["month"])
+                if len(mois) == 1:
+                    mois_prospero = str(mois)
+                    mois= f"0{mois}"
+                else:
+                    mois_prospero= dict_mois[str(mois)]
+                annee = str(row["year"])
+                date_prospero = "%s/%s/%s" % (jour_prospero, mois_prospero, annee[2:])
+                date_ctx = "%s/%s/%s" % (jour_prospero, mois, annee)
+                filepath = file_name(date_prospero,
+                                     "TWIT",
+                                     save_dir, list_path_file)
+                #path = os.path.join(filepath + ".txt")
+                path = filepath+".txt"
+                list_path_file.append(filepath)
+                print(path)
+                prc_txt.append(f"{save_dir}{path}")
 
 
-            auteur = str(row["user_screen_name"])
-            title = f"Posts de {auteur}"
-            with open(path, 'wb') as file:
-                titulo = title + "\r\n"
-                ponto = ".\r\n"
+                auteur = str(row["user_screen_name"])
+                title = f"Posts de {auteur}"
+                #titulo = title + "\r\n"
+                #ponto = ".\r\n"
                 texto = str(row["text"])
-                file.write(titulo.encode('utf8'))
-                file.write(ponto.encode('utf8'))
-                file.write(texto.encode('utf8'))
-            with open(f'{save_dir}/test.prc', 'a') as prc_file:
-                prc_file.write(f'{path}\n')
-
+                part_of_text = "\r\n.\r\n".join([title, texto])
+                zip_file.writestr(path, part_of_text.encode("utf-8"))
 
             #ed = f'\ ED: {row["ED"]}'
             #pg_se = f'PG: {row["PG"]} / SE: {row["SE"]} '.replace("\\", " ")
-            ctx = [
-                    "fileCtx0005",
-                    title,
-                    str(row["user_screen_name"]),
-                    "",
-                    "",
-                    date_ctx,
-                    nom_support,
-                    type_support,
-                    "",
-                    "",
-                    "",
-                    "Processed by Tiresias on %s" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    "",
-                    "n",
-                    "n",
-                    str(row["hour"]) #hour ?
-            ]
-            ctx = "\r\n".join(ctx)
-            ctx = ctx.encode('utf8', 'xmlcharrefreplace')  # to bytes
-            path = os.path.join(save_dir, filepath + ".ctx")
-            with open(path, 'wb') as file:
-                file.write(ctx)
-        with open(f'{save_dir}/test.prc', 'a') as prc_file:
-            prc_file.write(f'ENDFILE')
+                ctx = ["fileCtx0005",
+                        title,
+                        str(row["user_screen_name"]),
+                        "",
+                        "",
+                        date_ctx,
+                        nom_support,
+                        type_support,
+                        "",
+                        "",
+                        "",
+                        "Processed by Tiresias on %s" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        "",
+                        "n",
+                        "n",
+                        str(row["hour"])
+                        ] #hour ?]
+
+                ctx = "\r\n".join(ctx)
+                ctx = ctx.encode('utf8', 'xmlcharrefreplace')  # to bytes
+                path = os.path.join(filepath + ".ctx")
+                zip_file.writestr(path, ctx)
+
+            prc_txt.append("ENDFILE")
+            prc_file = "\r\n".join(prc_txt)
+            path_prc = nom_support.lower().replace(" ","_")
+            zip_file.writestr(path_prc, prc_file.encode('utf-8'))
+        buf = zip_buffer.getvalue()
+        zip_buffer.close()
+        return buf
+
+
+
 
 
 if __name__ == "__main__":

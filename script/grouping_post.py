@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from io import StringIO
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 
@@ -34,9 +33,16 @@ def df_processor(uploaded_files):
     df0["nb_word"]= df0.split_txt.str.len()
 
     #dfo = df0.loc[(df0["retweeted_id"].isna()) & (df0["nb_word"]>10)].reset_index() #on pourra choisir le seuil de mot
-    dfo = df0.loc[(df0["retweeted_id"].isna())].reset_index() #on pourra choisir le seuil de mot
+    dfo = df0.loc[(df0["retweeted_id"].isna())]#.reset_index() #on pourra choisir le seuil de mot
     dfo["nb_text_user"] = dfo.groupby(["user_id"])["text"].transform("count")
     dfo = dfo.loc[(dfo["nb_text_user"]>1)].reset_index()
+    dfo = dfo.drop(columns=["index"])
+    dfo["year"]= dfo.local_time.dt.year
+    dfo["month"]= dfo.local_time.dt.month
+    dfo["day"]= dfo.local_time.dt.day
+    dfo["hour"]= dfo.local_time.dt.time
+    #dg["date"] = dg.local_time.dt.date
+    dfo["source"] = "Twitter"
 
 
     return dfo

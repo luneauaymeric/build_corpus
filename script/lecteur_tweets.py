@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
-from io import StringIO
+import io
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import grouping_post as gp
 import visualisation
 import convert
+import zipfile
 #import streamlit as st
 #from tkinter import filedialog
 #import glob
@@ -47,8 +48,9 @@ if uploaded_files is not None:
 
     #buildcorpus = st.sidebar.write("Opérer un regroupement")
     st.sidebar.write("Opérer un regroupement")
+    st.sidebar.info("Entrez les valeurs de votre choix pour effectuer un regroupement.", icon="ℹ️")
     number = st.sidebar.number_input('Nombre minimum de mot')
-    minute_interval = st.sidebar.number_input("Définir l'intervale de temps (en minute)",value=30) #on concatène tous les textes publiés dans cet intervale
+    minute_interval = st.sidebar.number_input("Définir l'intervale de temps (en minute)",value=0) #on concatène tous les textes publiés dans cet intervale
     submit = st.sidebar.button(f'Regrouper')
 
 
@@ -77,7 +79,7 @@ if uploaded_files is not None:
         #csv = convert_df(new_df)
 
 
-        
+
 
     st.sidebar.divider()
     #st.sidebar.form("Télécharger un corpus Prospéro")
@@ -87,23 +89,36 @@ if uploaded_files is not None:
     narrateur = st.sidebar.selectbox("narrateur", [""])
     destinataire = st.sidebar.selectbox("destinataire", list_col_name)
     type_support = st.sidebar.selectbox("support", ("Twitter", "Twitch", "Instagram","Youtube"))
-    nom_support = st.sidebar.text_input("Nom de l'émission")
+    nom_support = st.sidebar.text_input("Nom de l'émission", value="Tapez le nom de l'émission")
     observation = st.sidebar.selectbox("observation", [x for x in df.columns])
-    statut = st.sidebar.selectbox("statut", [x for x in df.columns])
-    champ1 = st.sidebar.selectbox("champ 1", [x for x in df.columns])
-    champ2 = st.sidebar.selectbox("champ 2", [x for x in df.columns])
-    folder_path = st.sidebar.text_input("Entrer l'adresse du dossier de récupération")
+    # statut = st.sidebar.selectbox("statut", [x for x in df.columns])
+    # champ1 = st.sidebar.selectbox("champ 1", [x for x in df.columns])
+    # champ2 = st.sidebar.selectbox("champ 2", [x for x in df.columns])
+
+    folder_path = st.sidebar.text_input("Coller l'adresse du dossier de récupération")
+    st.sidebar.info("L\'adresse ci-dessus est utilisée pour créer le prc.", icon="ℹ️")
 
 
-
-    create_txt = st.sidebar.button('Télécharger un corpus Prospéro')
-
+    st.sidebar.header("Création et téléchargment d'un corpus Prospéro")
+    st.sidebar.info("Les textes sont créés en prenant en compte les valeur de regroupement (voir \"Opérer un regroupement\"). Si les valeurs sont à zéro, aucun regroupement n\'est effectué (i.e. on crée un fichier par tweet.).\nLes fichiers sont sauvegardés dans un dossier zip", icon="ℹ️")
+    create_txt = st.sidebar.button('Créer un corpus Prospéro')
+    #create_txt = st.sidebar.download_button('Télécharger un corpus Prospéro')
 
     if create_txt :
         #print(folder_path)
-        new_df = gp.group_by_user_by_minute(df, number, minute_interval)
+        if minute_interval > 0:
+            new_df = gp.group_by_user_by_minute(df, number, minute_interval)
+        else:
+            new_df= df.copy()
         new_df = new_df.loc[~(new_df["text"].isna())]
 
         #st.sidebar.write('You selected `%s`' % filename)
         convert_csv_to_txt = convert.ParseCsv.write_prospero_files(new_df, save_dir=folder_path, nom_support=nom_support, type_support=type_support)
         #create_prc
+        st.sidebar.download_button(
+            "Download corpus",
+            #on_click = zipfile_creator(),
+            file_name="corpus.zip",
+            mime="application/zip",
+            data=convert_csv_to_txt
+        )

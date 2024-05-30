@@ -1,0 +1,22 @@
+import streamlit as st
+import io
+import zipfile
+
+zip_buffer = io.BytesIO()
+
+with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+    for file_name, data in [
+        ("data1.csv", io.BytesIO(b'a,b,c')),
+        ("data2.csv", io.BytesIO(b'd,e,f'))
+    ]:
+        zip_file.writestr(file_name, data.getvalue())
+
+
+st.header("Appname")
+
+st.download_button(
+    "Download csv",
+    file_name="data.zip",
+    mime="application/zip",
+    data=zip_buffer
+)
