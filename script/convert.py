@@ -286,7 +286,7 @@ class ParseCsv:
 
             prc_txt.append("ENDFILE")
             prc_file = "\r\n".join(prc_txt)
-            path_prc = nom_support.lower().replace(" ","_")
+            path_prc = nom_support.lower().replace(" ","_")+".prc"
             zip_file.writestr(path_prc, prc_file.encode('utf-8'))
         buf = zip_buffer.getvalue()
         zip_buffer.close()
