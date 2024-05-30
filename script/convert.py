@@ -226,7 +226,6 @@ class ParseCsv:
             list_path_file =[]
 
             for _, row in self.iterrows():
-                print(row)
 
                 jour = str(row["day"])
                 if len(jour) == 1:
@@ -248,7 +247,7 @@ class ParseCsv:
                 #path = os.path.join(filepath + ".txt")
                 path = filepath+".txt"
                 list_path_file.append(filepath)
-                print(path)
+                #print(path)
                 prc_txt.append(f"{save_dir}{path}")
 
 
