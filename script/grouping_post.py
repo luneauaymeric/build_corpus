@@ -34,7 +34,9 @@ def df_processor(uploaded_files):
 
     #dfo = df0.loc[(df0["retweeted_id"].isna()) & (df0["nb_word"]>10)].reset_index() #on pourra choisir le seuil de mot
     dfo = df0.loc[(df0["retweeted_id"].isna())]#.reset_index() #on pourra choisir le seuil de mot
-    dfo["nb_text_user"] = dfo.groupby(["user_id"])["text"].transform("count")
+    dfo1 = dfo.groupby(["user_id"]).agg(nb_text_user:("text","size")).reset_index()
+    dict_nb_text = dict(zip(dfo1.user_id, dfo1.nb_text_user))
+    dfo["nb_text_user"]= dfo.user_id.map(dict_nb_text.get)
     dfo = dfo.loc[(dfo["nb_text_user"]>1)].reset_index()
     dfo = dfo.drop(columns=["index"])
     dfo["year"]= dfo.local_time.dt.year
