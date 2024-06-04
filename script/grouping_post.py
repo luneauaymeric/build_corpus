@@ -19,6 +19,7 @@ def df_processor(uploaded_files):
 
     df0['date'] = pd.to_datetime(pd.to_datetime(df0['local_time']).dt.date)
 
+    df0['yearmonth']=(df0['date'].dt.strftime('%Y-%m'))
     df0["yearmonth"] = pd.to_datetime(df0.yearmonth, format='%Y-%m')
 
     #On compte le nombre de mot pour ensuite filtrer les texts en fonction de leur longueur
