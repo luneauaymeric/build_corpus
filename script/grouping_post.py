@@ -18,13 +18,7 @@ def df_processor(uploaded_files):
     df0['local_time'] = pd.to_datetime(pd.to_datetime(df0['local_time']))
 
     df0['date'] = pd.to_datetime(pd.to_datetime(df0['local_time']).dt.date)
-    #df0['date'] = pd.to_datetime(pd.to_datetime(df0['local_time']).dt.strftime.date)
 
-    #df0['Year'] = df0['date'].dt.year
-    #df0['date'] = pd.to_datetime(df0['date'], format='%Y-%m-%d')
-    df0['yearmonth']=(df0['date'].dt.strftime('%Y-%m'))
-    df0['year']=(df0['date'].dt.strftime('%Y'))
-    df0["year"] = pd.to_datetime(df0.year, format='%Y')
     df0["yearmonth"] = pd.to_datetime(df0.yearmonth, format='%Y-%m')
 
     #On compte le nombre de mot pour ensuite filtrer les texts en fonction de leur longueur
@@ -34,10 +28,10 @@ def df_processor(uploaded_files):
 
     #dfo = df0.loc[(df0["retweeted_id"].isna()) & (df0["nb_word"]>10)].reset_index() #on pourra choisir le seuil de mot
     dfo = df0.loc[(df0["retweeted_id"].isna())]#.reset_index() #on pourra choisir le seuil de mot
-    dfo1 = dfo.groupby(["user_id"]).agg(nb_text_user=("text","size")).reset_index()
-    dict_nb_text = dict(zip(dfo1.user_id, dfo1.nb_text_user))
-    dfo["nb_text_user"]= dfo.user_id.map(dict_nb_text.get)
-    dfo = dfo.loc[(dfo["nb_text_user"]>1)].reset_index()
+    #dfo1 = dfo.groupby(["user_id"]).agg(nb_text_user=("text","size")).reset_index()
+    #dict_nb_text = dict(zip(dfo1.user_id, dfo1.nb_text_user))
+    #dfo["nb_text_user"]= dfo.user_id.map(dict_nb_text.get)
+    #dfo = dfo.loc[(dfo["nb_text_user"]>1)].reset_index()
     dfo = dfo.drop(columns=["index"])
     dfo["year"]= dfo.local_time.dt.year
     dfo["month"]= dfo.local_time.dt.month
