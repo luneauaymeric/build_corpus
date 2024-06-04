@@ -13,7 +13,9 @@ import csv
 import pandas as pd
 import zipfile
 import io
-
+import cleaning
+from cleaning import Cleaner
+import emoji
 # try:
 #     import cleaning
 # except:
@@ -82,101 +84,6 @@ def file_name(date, prefix, save_dir, list_path_file):
     return name
 
 
-def parse(article):
-    """return text and metadata"""
-    result = {}
-    # get title
-    try:
-        tag = re.search(r'<(b|span) class=["\'][a-z]{2}Headline',
-                        article).group(1)
-        title = get(article,
-                    '<%s class=["\'][a-z]{2}Headline["\']>' % tag,
-                    '</%s>' % tag)
-        result['title'] = re.sub(r"^(\r\n|\n)\s*", "", title)
-        result['title'] = re.sub(r"\s*(\r\n|\n)\s*$", "", result['title'])
-        result['title'] = re.sub(r"\s+", " ", result['title'])
-        result["title"] = str(result["title"]).strip()
-    except:
-        result['title'] = "Title problem"
-    # remove <b> and </b>
-    result['title'] = re.sub(r"</?b>", "", result['title'])
-    # get date and support
-    divs = re.split('<div>', article)
-    form1 = re.compile(r"\d{1,2}\s+[a-zéèûñíáóúüãçA-Z]*\s+\d{4}</div>")
-    form2 = re.compile(r"<td>(\d{1,2}\s+[a-zéèûñíáóúüãçA-Z]*\s+\d{4})</td>")
-    c = 0
-    for div in divs:
-
-        chaves = ["CLM", "SE", "HD", "BY", "CR", "WC", "PD", "SN", "SC", "ED", "PG", "LA", "CY", "LP", "TD", "ART",
-                  "CO", "IN", "NS", "RE", "IPC", "IPD", "PUB", "AN"]
-        for chave in chaves:
-            div_name = f"<b>{chave}</b>&nbsp;</td><td>"
-            if div_name in div:
-                v = get(div, div_name, "</td></tr>")
-                v = str(v).strip()
-                v = v.replace("<br/>", "").replace("</span>", "")
-                v = re.sub(r"</?b>", "", v)
-                v = re.sub(r"</?span[^>]*>", "", v)
-                v = re.sub(r"</?font[^>]*>", "", v)
-                v = re.sub(r"<br[^>]*>", "", v)
-                result[chave] = v
-            else:
-                result[chave] = ""
-
-        if form1.search(div):
-            result['date'] = div[:-6]
-            if re.search(r"\d{2}:\d{2}</div>", divs[divs.index(div) + 1]):
-                result['time'] = u"REF_HEURE:%s" % div[:-6]
-                result['media'] = divs[divs.index(div) + 2][:-6]
-            else:
-                result['media'] = divs[divs.index(div) + 1][:-6]
-        elif form2.search(div):
-            result['date'] = form2.search(div).group(1)
-            result['media'] = get(article,
-                                  '<b>SN</b>&nbsp;</td><td>',
-                                  '</td>')
-        else:
-            result['date'] = result["PD"]
-            result['media'] = result["SN"]
-    # format date
-
-    result['date'] = format_date(result['date'])
-    # get narrator
-    try:
-        result['narrator'] = get(article,
-                                 '<div class="author">',
-                                 r'\s*</div>')
-    except:
-        pass
-
-    paragraphs = re.split('<p class="articleParagraph [a-z]{2}\
-articleParagraph" >', article)[1:]
-    if not paragraphs:
-        paragraphs = re.split('<p class="articleParagraph [a-z]{2}\
-articleParagraph">', article)[1:]
-    # get text content
-    result['text'] = result['title'] + "\r\n.\r\n" + "LP: "
-
-    for idx, paragraph in enumerate(paragraphs):
-        p = paragraph
-        paragraph = re.split("</p>", paragraph)[0]
-        paragraph = re.sub(r"^(\r\n|\n)\s*", "", paragraph)
-        paragraph = re.sub(r"\s*(\r\n|\n)\s*", " ", paragraph)
-        paragraph = re.sub(r"</?b>", "", paragraph)  # remove <b> and </b>
-        # removendo span
-        paragraph = re.sub(r"</?span[^>]*>", "", paragraph)
-        lp = p if "</td><td>" in p else ""
-        if lp:
-            if idx < len(paragraphs) - 1:
-                result["LP"] = paragraph
-                paragraph = paragraph + "\r\n" + "TD: "
-        result['text'] += paragraph
-    texto = str(str(result['text']).split('LP:')[1]).split('TD:')
-    result["LP"] = texto[0]
-    result["TD"] = texto[1]
-    result["text"] = result["text"].replace("LP: ", "").replace("TD: ", "")
-    return result
-
 
 class ParseCsv:
     """from htm of csv to Prospero"""
@@ -221,7 +128,7 @@ class ParseCsv:
             dictio_fic = "/home/aymeric/corpus/0_dic/Etre_fictif/EF_pesti_medialab.fic"
             dictio_cat = "/home/aymeric/corpus/0_dic/Categories/Cat_pesti_medialab.CAT"
             dictio_col = "/home/aymeric/corpus/0_DIC/COLLECTIONS/Coll_pesti_medialab.col"
-            prc_txt= ["projet0005", dictio_fic, dictio_cat, dictio_col, "français"]
+            prc_txt= ["projet0005", dictio_elem, dictio_fic, dictio_cat, dictio_col, "français"]
 
             list_path_file =[]
 
@@ -257,7 +164,11 @@ class ParseCsv:
                 #ponto = ".\r\n"
                 texto = str(row["text"])
                 part_of_text = "\r\n.\r\n".join([title, texto])
-                zip_file.writestr(path, part_of_text.encode("utf-8"))
+                part_of_text = emoji.demojize(part_of_text, language='fr')
+                C = Cleaner(part_of_text.encode("utf-8"), options="ua")
+                C_latin = bytes(C.content, 'latin-1')
+                zip_file.writestr(path, C_latin)
+
 
             #ed = f'\ ED: {row["ED"]}'
             #pg_se = f'PG: {row["PG"]} / SE: {row["SE"]} '.replace("\\", " ")
@@ -280,14 +191,16 @@ class ParseCsv:
                         ] #hour ?]
 
                 ctx = "\r\n".join(ctx)
-                ctx = ctx.encode('utf8', 'xmlcharrefreplace')  # to bytes
+                ctx = emoji.demojize(ctx, language='fr')
+                Ctx = Cleaner(ctx.encode("utf-8"), options="ua")
+                Ctx_latin = bytes(Ctx.content, 'latin-1')
                 path = os.path.join(filepath + ".ctx")
-                zip_file.writestr(path, ctx)
+                zip_file.writestr(path, Ctx_latin)
 
             prc_txt.append("ENDFILE")
             prc_file = "\r\n".join(prc_txt)
             path_prc = nom_support.lower().replace(" ","_")+".prc"
-            zip_file.writestr(path_prc, prc_file.encode('utf-8'))
+            zip_file.writestr(path_prc, prc_file.encode('latin-1'))
         buf = zip_buffer.getvalue()
         zip_buffer.close()
         return buf
