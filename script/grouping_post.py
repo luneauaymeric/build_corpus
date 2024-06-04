@@ -32,7 +32,7 @@ def df_processor(uploaded_files):
     #dfo1 = dfo.groupby(["user_id"]).agg(nb_text_user=("text","size")).reset_index()
     #dict_nb_text = dict(zip(dfo1.user_id, dfo1.nb_text_user))
     #dfo["nb_text_user"]= dfo.user_id.map(dict_nb_text.get)
-    #dfo = dfo.loc[(dfo["nb_text_user"]>1)].reset_index()
+    dfo = dfo.reset_index()
     dfo = dfo.drop(columns=["index"])
     dfo["year"]= dfo.local_time.dt.year
     dfo["month"]= dfo.local_time.dt.month
