@@ -60,13 +60,15 @@ if uploaded_files is not None:
     fig = visualisation.tracer_graphique(data = df, d = "Jour")
     tab1, tab2 = st.tabs(["Texte", "Tableau"])
     with tab1 :
-        timeserie = st.pyplot(fig)
+        #st.video("https://www.dailymotion.com/video/x89a0g0", format ="text/html")
         st.divider()
         placeholder = st.empty()
         container = st.container()
         with placeholder.container():
             show_text = visualisation.display_text(data=df)
     with tab2:
+        timeserie = st.pyplot(fig)
+        st.divider()
         placeholder2 = st.empty()
         container2 = st.container()
         with placeholder2.container():
