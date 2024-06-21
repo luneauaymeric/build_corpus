@@ -118,7 +118,7 @@ class ParseCsv:
     #             self.articles[key]['source_type'] = 'unknown source'
     #             self.articles[key]['root'] = 'FACTIVA'
     #@st.cache_data
-    def write_prospero_files(self, save_dir, nom_support, type_support, cleaning=False):
+    def write_prospero_files(self, save_dir, nom_support, type_support, observation, cleaning=False):
 
         """for each article, write txt, csv and ctx in a given directory"""
         dict_date = {"10":"A", "11":"B", "12":"C"}
@@ -148,6 +148,7 @@ class ParseCsv:
                 annee = str(row["year"])
                 date_prospero = "%s/%s/%s" % (jour_prospero, mois_prospero, annee[2:])
                 date_ctx = "%s/%s/%s" % (jour_prospero, mois, annee)
+                heure_pub = str(row["hour"])
                 filepath = file_name(date_prospero,
                                      "TWIT",
                                      save_dir, list_path_file)
@@ -158,7 +159,7 @@ class ParseCsv:
                 prc_txt.append(f"{save_dir}{path}")
 
 
-                auteur = str(row["user_screen_name"])
+                auteur = str(row["author"])
                 title = f"Posts de {auteur}"
                 #titulo = title + "\r\n"
                 #ponto = ".\r\n"
@@ -174,20 +175,20 @@ class ParseCsv:
             #pg_se = f'PG: {row["PG"]} / SE: {row["SE"]} '.replace("\\", " ")
                 ctx = ["fileCtx0005",
                         title,
-                        str(row["user_screen_name"]),
+                        str(row["author"]),
                         "",
                         "",
                         date_ctx,
                         nom_support,
                         type_support,
-                        "",
+                        observation,
                         "",
                         "",
                         "Processed by Tiresias on %s" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         "",
                         "n",
                         "n",
-                        str(row["hour"])
+                        f"REF_HEURE:{heure_pub}" # heure de publication
                         ] #hour ?]
 
                 ctx = "\r\n".join(ctx)

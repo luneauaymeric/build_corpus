@@ -6,12 +6,19 @@ import matplotlib.pyplot as plt
 @st.cache_data
 def display_text(data):
     for n, x in enumerate(data.text):
-        st.write('__Name:__ ', data['user_screen_name'].iloc[n])
+        if 'user_screen_name' in data.columns:
+            st.write('__Name:__ ', data['user_screen_name'].iloc[n])
+        elif 'author' in data.columns:
+            st.write('__Name:__ ', data['author'].iloc[n])
+
         if "User_status" in data.columns:
             st.write('__Statut:__ ', data['User_status'].iloc[n])
-        if "retweeted_id" in data.columns:
+        else:
+            pass
+        #st.write(x)
+        if "reply_to" in data.columns:
             if data.retweeted_id.isnull().iloc[n] == False:
-                st.write('__retweet de :__ ', data['retweeted_user'].iloc[n])
+                st.write('__retweet de :__ ', data['retweeted_user_id'].iloc[n])
             else:
                 pass
         else:
@@ -46,3 +53,7 @@ def tracer_graphique(data, d):
     plt.ylabel("Nombre de tweets")
     plt.tight_layout()
     return fig
+
+@st.cache_data
+def display_dataframe(data):
+    st.dataframe(data)

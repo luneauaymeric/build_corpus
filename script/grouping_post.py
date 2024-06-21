@@ -4,45 +4,40 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 
 @st.cache_data
-def df_processor(uploaded_files):
+def df_processor(data, source):
     '''Fonction pour mettre en forme le fichier csv : on définit le type des colonnes, on convertit les colonnes "de date" au format Date etc.
 
     uploaded_files : a csv'''
 
-    dic_id={}
-    for x in [x for x in pd.read_csv(uploaded_files).columns if 'id' in x]:
-        dic_id[x]=str
+    data['local_time'] = pd.to_datetime(pd.to_datetime(data['local_time']))
 
-    uploaded_files.seek(0)
-    df0 = pd.read_csv(uploaded_files, dtype = dic_id)
-    df0['local_time'] = pd.to_datetime(pd.to_datetime(df0['local_time']))
+    data['date'] = pd.to_datetime(pd.to_datetime(data['local_time']).dt.date)
 
-    df0['date'] = pd.to_datetime(pd.to_datetime(df0['local_time']).dt.date)
-
-    df0['yearmonth']=(df0['date'].dt.strftime('%Y-%m'))
-    df0["yearmonth"] = pd.to_datetime(df0.yearmonth, format='%Y-%m')
+    data['yearmonth']=(data['date'].dt.strftime('%Y-%m'))
+    data["yearmonth"] = pd.to_datetime(data.yearmonth, format='%Y-%m')
 
     #On compte le nombre de mot pour ensuite filtrer les texts en fonction de leur longueur
-    df0["length_text"] = df0.text.str.len()
-    df0["split_txt"] = df0.text.str.split(" ")
-    df0["nb_word"]= df0.split_txt.str.len()
+    data["length_text"] = data.text.str.len()
+    data["split_txt"] = data.text.str.split(" ")
+    data["nb_word"]= data.split_txt.str.len()
 
-    #dfo = df0.loc[(df0["retweeted_id"].isna()) & (df0["nb_word"]>10)].reset_index() #on pourra choisir le seuil de mot
-    dfo = df0.loc[(df0["retweeted_id"].isna())]#.reset_index() #on pourra choisir le seuil de mot
-    #dfo1 = dfo.groupby(["user_id"]).agg(nb_text_user=("text","size")).reset_index()
-    #dict_nb_text = dict(zip(dfo1.user_id, dfo1.nb_text_user))
-    #dfo["nb_text_user"]= dfo.user_id.map(dict_nb_text.get)
-    dfo = dfo.reset_index()
-    dfo = dfo.drop(columns=["index"])
-    dfo["year"]= dfo.local_time.dt.year
-    dfo["month"]= dfo.local_time.dt.month
-    dfo["day"]= dfo.local_time.dt.day
-    dfo["hour"]= dfo.local_time.dt.time
+    if "retweeted_id" in data.columns:
+        data = data.loc[(data["retweeted_id"].isna())]
+        data = data.reset_index()
+        data = data.drop(columns=["index"])
+    else:
+        pass
+
+
+    data["year"]= data.local_time.dt.year
+    data["month"]= data.local_time.dt.month
+    data["day"]= data.local_time.dt.day
+    data["hour"]= data.local_time.dt.time
     #dg["date"] = dg.local_time.dt.date
-    dfo["source"] = "Twitter"
+    data["source"] = source
 
 
-    return dfo
+    return data
 
 def group_by_user_by_minute(data, number, minute_interval):
 
