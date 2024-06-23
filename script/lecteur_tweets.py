@@ -19,14 +19,53 @@ import psql_to_stream
 
 # Fonction pour afficher les "topics disponibles"
 def dic_emission_twit():
-    dfe = pd.read_csv("data-1718699997549.csv")
-    dfe = dfe[["collect_filePath"]].drop_duplicates()
-    dict_emission = {}
-    for n, x in enumerate(dfe.collect_filePath):
-        file = dfe.collect_filePath.iloc[n]
-        nom_emission = file.split('/')[-1]
-        #print(nom_emission.split('.xls')[0])
-        dict_emission[nom_emission.split('.xls')[0]] = x
+    # dfe = pd.read_csv("data-1718699997549.csv")
+    # dfe = dfe[["collect_filePath"]].drop_duplicates()
+    # dict_emission = {}
+    # for n, x in enumerate(dfe.collect_filePath):
+    #     file = dfe.collect_filePath.iloc[n]
+    #     nom_emission = file.split('/')[-1]
+    #     #print(nom_emission.split('.xls')[0])
+    #     dict_emission[nom_emission.split('.xls')[0]] = x
+    dict_emission = {'2022-04-12-lepen-tf1': 'files/twitter/lePen/2022-04-12-lepen-tf1.xlsx',
+ '2022-03-24-zemmour': 'files/twitter/zemmour/2022-03-24-zemmour.xlsx',
+ '2022-03-23-roussel': 'files/twitter/roussel/2022-03-23-roussel.xlsx',
+ '2022-04-06-melenchon': 'files/twitter/melenchon/2022-04-06-melenchon.xlsx',
+ '2022-03-23-pecresse': 'files/twitter/pecresse/2022-03-23-pecresse.xlsx',
+ '2022-04-01-lassalle': 'files/twitter/lassalle/2022-04-01-lassalle.xlsx',
+ '2022-04-15-lepen': 'files/twitter/lePen/2022-04-15-lepen.xlsx',
+ '2022-02-15-pecresse': 'files/twitter/pecresse/2022-02-15-pecresse.xlsx',
+ '2022-03-07-faceauxfrancaises': 'files/twitter/2022-03-07-faceauxfrancaises.xlsx',
+ '2022-03-28-grandoral': 'files/twitter/2022-03-28-grandoral.xlsx',
+ '#zemmourvsmelenchon-#faceababa-2022-01-27': 'files/twitter/#zemmourvsmelenchon-#faceababa-2022-01-27.xlsx',
+ '2022-03-24-elysee': 'files/twitter/2022-03-24-elysee.xlsx',
+ 'tweets': 'files/twitter/roussel/tweets.xlsx',
+ '2022-04-04-zemmour': 'files/twitter/zemmour/2022-04-04-zemmour.xlsx',
+ '2022-04-03-poutou10mn': 'files/twitter/poutou/2022-04-03-poutou10mn.xlsx',
+ '2022-04-06-lepen': 'files/twitter/lePen/2022-04-06-lepen.xlsx',
+ '2022-04-07-dupont-aignan': 'files/twitter/dupontAignan/2022-04-07-dupont-aignan.xlsx',
+ '2022-03-24-melenchon': 'files/twitter/melenchon/2022-03-24-melenchon.xlsx',
+ '2022-03-21-roussel': 'files/twitter/roussel/2022-03-21-roussel.xlsx',
+ '2022-04-06-zemmour': 'files/twitter/zemmour/2022-04-06-zemmour.xlsx',
+ '2022-04-08-pecresse-tf1': 'files/twitter/pecresse/2022-04-08-pecresse-tf1.xlsx',
+ '2022-03-03-lepen': 'files/twitter/lePen/2022-03-03-lepen.xlsx',
+ '2022-04-13-macron': 'files/twitter/macron/2022-04-13-macron.xlsx',
+ '2022-02-20-zemmour': 'files/twitter/zemmour/2022-02-20-zemmour.xlsx',
+ '2022-03-31-dupont-aignan': 'files/twitter/dupontAignan/2022-03-31-dupont-aignan.xlsx',
+ '2022-02-17-jadot': 'files/twitter/jadot/2022-02-17-jadot.xlsx',
+ '2022-02-20-lepen': 'files/twitter/lePen/2022-02-20-lepen.xlsx',
+ '2022-03-29-comptearebours': 'files/twitter/2022-03-29-comptearebours.xlsx',
+ '2022-04-04-jadot': 'files/twitter/jadot/2022-04-04-jadot.xlsx',
+ '2022-03-25-melenchon': 'files/twitter/melenchon/2022-03-25-melenchon.xlsx',
+ '2022-03-17-jadot': 'files/twitter/jadot/2022-03-17-jadot.xlsx',
+ '2022-04-06-macron': 'files/twitter/macron/2022-04-06-macron.xlsx',
+ '2022-04-03-poutou': 'files/twitter/poutou/2022-04-03-poutou.xlsx',
+ '2022-04-18-lepen': 'files/twitter/lePen/2022-04-18-lepen.xlsx',
+ '2022-03-22-jadot': 'files/twitter/jadot/2022-03-22-jadot.xlsx',
+ '2022-02-22-pecresse': 'files/twitter/pecresse/2022-02-22-pecresse.xlsx',
+ '2022-03-16-pecresse': 'files/twitter/pecresse/2022-03-16-pecresse.xlsx'}
+
+
     return dict_emission
 
 def topics(data,topic_column):
