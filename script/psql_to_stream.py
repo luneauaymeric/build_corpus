@@ -45,5 +45,28 @@ def connect_twitter(_conn, show):
     return df
     #st.dataframe(data=df)
 
+st.cache_data
+def connect_youtube(_conn):
+    df = _conn.query('SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id', ttl="10m")
+    #df1= _conn.query('SELECT DISTINCT comment_id, publication_id, "isReplyTo" FROM public.youtube_comment WHERE  "isReplyTo" NOT LIKE \'nan\'', ttl="10m")
+    df11= _conn.query('SELECT DISTINCT person_id, id, comment_id FROM public.youtube_comment WHERE  "isReplyTo" LIKE \'nan\'', ttl="10m")
+    dict_comment_id = dict(zip(df.comment_id, df.id))
+    dict_comment_person = dict(zip(df.comment_id, df.person_id))
+    dict_comment_person_name = dict(zip(df.comment_id, df.name))
+    df["id_reply"] = df.isReplyTo.map(dict_comment_id.get)
+    df["person_id_reply"] = df.isReplyTo.map(dict_comment_person.get)
+    df["person_name_reply"] = df.isReplyTo.map(dict_comment_person_name.get)
+
+
+
+    df2 = _conn.query('SELECT ta.title, ta.channel_name, t.id FROM public.youtube_comment t JOIN public.youtube_post ta ON t.publication_id=ta.publication_id', ttl="10m")
+    dict_channel = dict(zip(df2.id, df2.channel_name))
+    dict_title_post = dict(zip(df2.id, df2.title))
+    df["channel"] = df.id.map(dict_channel.get)
+    df["title_post"] = df.id.map(dict_title_post.get)
+    new_column_name = {"name":"author", "text_content":"text", "date":"local_time"}
+    df= df.rename(columns = new_column_name)
+    return df
+
 # Print results.
 #st.dataframe(data=df)postgresql://username:password@postgres:5432/dbname

@@ -152,11 +152,15 @@ else:
     _conn = init_connection()
     #conn = st.connection("postgresql", type="sql", url="postgresql://Aymeric:jhsd4098ug4k3@postgres:5432/dbname")
     plateform = st.sidebar.selectbox("Quelle plateforme vous intéresse ?",
-    ("Twitch", "Twitter"))
+    ("Twitch", "Twitter", "Youtube"))
     # Perform query.
     if plateform == "Twitch":
         df0 = psql_to_stream.connect_twitch(_conn)
         df = gp.df_processor(data=df0, source = "Twitch")
+
+    elif plateform == "Youtube":
+        df0 = psql_to_stream.connect_youtube(_conn)
+        df = gp.df_processor(data=df0, source = "Youtube")
 
     elif plateform == "Twitter":
         dic_emission = dic_emission_twit()

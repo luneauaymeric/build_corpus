@@ -166,7 +166,7 @@ class ParseCsv:
                 texto = str(row["text"])
                 part_of_text = "\r\n.\r\n".join([title, texto])
                 part_of_text = emoji.demojize(part_of_text, language='fr')
-                C = Cleaner(part_of_text.encode("utf-8"), options="ua")
+                C = Cleaner(part_of_text.encode("utf-8"), options="uasdhtpcef")
                 C_latin = bytes(C.content, 'latin-1')
                 zip_file.writestr(path, C_latin)
 
