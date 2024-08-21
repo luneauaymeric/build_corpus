@@ -46,17 +46,16 @@ def group_by_user_by_minute(data, number, minute_interval):
     list_text=[]
     list_min_date=[]
     list_max_date=[]
-    for n, user in enumerate(data.user_screen_name.unique()):
+    for n, user in enumerate(data.author.unique()):
         print(user)
-        dtemp = data.loc[data["user_screen_name"]==user]
+        dtemp = data.loc[data["author"]==user]
         dtemp = dtemp.drop_duplicates(subset="text")
         n_row = len(dtemp)
         compteur = 0
         while compteur < n_row:
             first_tweet = dtemp.local_time.min()
-            print(first_tweet)
             dtemp1 = dtemp.loc[(dtemp["local_time"] >= first_tweet) &
-                               (dtemp["local_time"]< first_tweet+timedelta(minutes = int(minute_interval)))]
+                               (dtemp["local_time"]<= first_tweet+timedelta(minutes = int(minute_interval)))]
             min_date = dtemp1.local_time.min()
             max_date = dtemp1.local_time.max()
             for m, tweets in enumerate(dtemp1.text):
@@ -74,7 +73,7 @@ def group_by_user_by_minute(data, number, minute_interval):
             dtemp = dtemp.loc[(dtemp["local_time"]>= first_tweet+timedelta(minutes = int(minute_interval)))]
             compteur += len(dtemp1)
 
-    dict_data = {"user_screen_name": list_user, "text":list_text, "min_date": list_min_date, "max_date":list_max_date}
+    dict_data = {"author": list_user, "text":list_text, "min_date": list_min_date, "max_date":list_max_date}
     dg = pd.DataFrame(dict_data)
     dg["year"]= dg.min_date.dt.year
     dg["month"]= dg.min_date.dt.month
@@ -82,6 +81,6 @@ def group_by_user_by_minute(data, number, minute_interval):
     dg["hour"]= dg.min_date.dt.time
     dg["date"] = dg.min_date.dt.date
     dg["source"] = "Twitter"
-    dg = dg.merge(data[["user_screen_name","user_description"]].drop_duplicates(), on = ["user_screen_name"], how = "left")
+    dg = dg.merge(data[["author"]].drop_duplicates(), on = ["author"], how = "left")
 
     return dg

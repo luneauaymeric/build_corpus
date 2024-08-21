@@ -17,6 +17,9 @@ import psql_to_stream
 
 # Script inspired from https://github.com/emilienschultz/dstool
 
+
+### Définition des fonctions
+
 # Fonction pour afficher les "topics disponibles"
 def dic_emission_twit():
     # dfe = pd.read_csv("data-1718699997549.csv")
@@ -68,6 +71,31 @@ def dic_emission_twit():
 
     return dict_emission
 
+
+
+
+def dic_emission_twitch():
+    dfe = pd.read_csv("liste_emission.csv")
+    dict_emission = dict(zip(dfe.emission_title, dfe.twitch_id))
+    return dict_emission
+
+def dic_emission(dfe):
+    #dfe = pd.read_csv("liste_emission.csv")
+    dict_emission = dict(zip(dfe.emission_title, dfe.twitch_id))
+    dfc= dfe[["Publication Title"]].drop_duplicates()
+    list_channel = [x for x in dfc["Publication Title"]]
+    dfg = dfe[["Guest"]].drop_duplicates()
+    dfg["Guest2"] = dfg["Guest"].str.split(";")
+    dfg = dfg["Guest2"].explode()
+    list_candidat = []
+    for x in dfg.drop_duplicates():
+        x_nom = x.split(",")[0].strip()
+        if x_nom not in list_candidat:
+            list_candidat.append(x_nom)
+
+    return dict_emission, list_candidat, list_channel
+
+
 def topics(data,topic_column):
     d_topic = data.groupby([topic_column]).agg(nb = ("id", "size")).sort_values("nb", ascending=False).reset_index()
     list_topics = [x for x in d_topic[topic_column].unique()]
@@ -83,6 +111,11 @@ def download_corpus(df):
         height=0,
     )
 
+@st.cache_data
+def read_dfemission():
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return  pd.read_csv("liste_emission.csv")
+
 
 @st.cache_data # évite que cette fonction soit exécutée à chaque fois
 def convert_df(df):
@@ -93,6 +126,8 @@ def convert_df(df):
 def init_connection():
     return st.connection("postgresql", type="sql")
 
+
+### Front hand
 
 tab1, tab2, tab3 = st.tabs(["Tableau", "Texte", "label"])
 with tab1 :
@@ -125,12 +160,15 @@ with tab3:
 
 
 #  Chargement du CSV contenant les tweets (un seul fichier à la fois)
+st.session_state.dataframe = 0
+st.session_state.corpus = False
 st.sidebar.title("Mes données d'origine")
 bdd = st.sidebar.radio(
     "Je veux construire un corpus Prospéro depuis",
     ["Un fichier CSV", "Une base donnée postgresql"])
 
 if bdd == "Un fichier CSV":
+    st.session_state.bdd = "CSV"
     uploaded_files = st.sidebar.file_uploader("Téléverser le fichier csv", accept_multiple_files=False)
     if uploaded_files is not None:
         dic_id={}
@@ -140,96 +178,185 @@ if bdd == "Un fichier CSV":
 
         uploaded_files.seek(0)
         df0 = pd.read_csv(uploaded_files, dtype = dic_id)
+
+        st.sidebar.divider()
         column_author = st.sidebar.selectbox("Auteur", [x for x in df0.columns if "name" in x])
         source = st.sidebar.text_input("Nom de la source", value="Tapez le nom de la source (twitter, twitch, etc.)")
         df0 = df0.rename(columns={column_author:"author"})
 
         df = gp.df_processor(data=df0, source = source)
+        st.session_state.dataframe = 1
+
+
+
 
 
 else:
-    # Initialize connection.
+    st.session_state.bdd = "PSQL"
+
+
+    dfe = read_dfemission()
+
+    st.sidebar.divider()
+    dic_emission, list_candidat, list_channel = dic_emission(dfe)
+    st.sidebar.markdown("## Requête vers la base de données")
+    st.sidebar.info("Les variables ci-dessous permettent d'obtenir un tableau correspondant aux options choisies.", icon="ℹ️")
+    plateform = st.sidebar.selectbox("Choix de la plateforme", ("Youtube","Twitch", "Twitter"))
+    #platform2 = st.multiselect("Quelle plateforme vous intéresse ?", ["Twitch", "Twitter", "Youtube"])
+    #nom_emission2 = st.selectbox("Quelle(s) émission(s)", [x for x in dic_emission])
+    nom_emission3 = st.sidebar.multiselect("Choix de la ou des émission(s)", [x for x in list_channel])
+    nom_candidat = st.sidebar.multiselect("Choix d'un.e ou de plusieurs candidat.es", [x for x in list_candidat])
+    #ask_bdd = st.sidebar.button("Envoyer la requête")
+
+
+    #if ask_bdd :
+        # Initialize connection.
+
+
+    if len(nom_emission3 )> 0:
+        dfe = dfe.loc[dfe["Publication Title"].isin(nom_emission3)]
+    else:
+        pass
+    print(len(nom_candidat))
+    if len(nom_candidat)== 1:
+        dfe = dfe.loc[dfe["Guest"].str.contains(nom_candidat[0], na=False)]
+    elif len(nom_candidat)> 1:
+        dfe = dfe.loc[dfe["Guest"].str.contains('|'.join(nom_candidat), na=False)]
+    else:
+        pass
+
+    list_publi_id = [x for x in dfe.twitch_id.loc[~dfe["twitch_id"].isna()]]
+    print(list_publi_id)
+
+    liste_hashtag = []
+    for x in dfe.hashtag.loc[~dfe.hashtag.isna()]:
+        split_hash = x.split("|")
+        for hash in split_hash:
+            if hash not in liste_hashtag:
+                liste_hashtag.append(hash)
+            else:
+                pass
+    print(liste_hashtag)
+
+
     _conn = init_connection()
     #conn = st.connection("postgresql", type="sql", url="postgresql://Aymeric:jhsd4098ug4k3@postgres:5432/dbname")
-    plateform = st.sidebar.selectbox("Quelle plateforme vous intéresse ?",
-    ("Twitch", "Twitter", "Youtube"))
-    # Perform query.
+    #plateform = st.sidebar.selectbox("Quelle(s) plateforme(s) vous intéresse ?",("Twitch", "Twitter", "Youtube"))
+
+# Perform query.
     if plateform == "Twitch":
-        df0 = psql_to_stream.connect_twitch(_conn)
-        df = gp.df_processor(data=df0, source = "Twitch")
+        df0 = psql_to_stream.connect_twitch(_conn, list_publi_id)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Twitch")
+            dict_channel = dict(zip(dfe.twitch_id, dfe["Publication Title"]))
+            df["twitch_id"] = df.twitch_id.astype("str")
+            df = df.merge(dfe[["twitch_id", "Guest", "Publication Title"]], on = ["twitch_id"], how="left")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
 
     elif plateform == "Youtube":
-        df0 = psql_to_stream.connect_youtube(_conn)
-        df = gp.df_processor(data=df0, source = "Youtube")
+        df0 = psql_to_stream.connect_youtube(_conn, nom_candidat, nom_emission3)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Youtube")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
 
     elif plateform == "Twitter":
-        dic_emission = dic_emission_twit()
-        nom_emission = st.sidebar.selectbox("Emissions", [x for x in dic_emission])
-        show = dic_emission[nom_emission]
-        print(show)
-        df0 = psql_to_stream.connect_twitter(_conn, show)
-        df = gp.df_processor(data=df0, source = "Twitter")
+        df0 = psql_to_stream.connect_twitter(_conn, liste_hashtag)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Twitter")
+            nb_row = len(df)
+        else:
+            nb_row= 0
 
-    #st.dataframe(data=df)
+    st.session_state.requete = True
+    if nb_row > 0 :
+        st.session_state.dataframe = 1
+    elif nb_row == 0:
+        st.session_state.dataframe = -1
 
-try:
+
+
+st.sidebar.write(st.session_state)
+
+if st.session_state.dataframe == 1:
+
+
+    st.sidebar.divider()
+    st.sidebar.markdown("## Regrouper les posts")
+    st.sidebar.info("Entrez les valeurs de votre choix pour effectuer un regroupement.", icon="ℹ️")
+    number = st.sidebar.number_input('Nombre minimum de mot', key = "nombre_mot" )
+    minute_interval = st.sidebar.number_input("Définir l'intervale de temps (en minute)",value=0, key ="nombre_minute") #on concatène tous les textes publiés dans cet intervale
+
+    if st.session_state.nombre_mot > 0 or st.session_state.nombre_minute > 0:
+        new_df = df.loc[~(df["text"].isna())]
+        if number+minute_interval>0:
+            df = gp.group_by_user_by_minute(new_df, number, minute_interval)
+            print(new_df.columns)
+        else:
+            pass
+
+
+
+    #new_df= df.copy()
+    #new_df = new_df.loc[~(new_df["text"].isna())]
+
+    #st.sidebar.write('You selected `%s`' % filename)
+
+    st.sidebar.divider()
+
+    ### Option pour le regoupement
+
+    #submit = st.form_submit_button("Regrouper les posts")
+
+
+    name = st.sidebar.selectbox("auteur", ["author"])
+    #narrateur = st.selectbox("narrateur", [""])
+    #destinataire = st.selectbox("destinataire", list_col_name)
+
+    #nom_support = st.text_input("Nom de l'émission", value="Tapez le nom de l'émission")
+    observation = st.sidebar.selectbox("observation", [x for x in df.columns])
+    folder_path = st.sidebar.text_input("Coller l'adresse du dossier de récupération")
+    st.sidebar.info("L\'adresse ci-dessus est utilisée pour créer le prc.", icon="ℹ️")
+
+    submit = st.sidebar.button("Créer le corpus")
+    if submit :
+
+        convert_csv_to_txt = convert.ParseCsv.write_prospero_files(df, save_dir=folder_path, observation= observation)
+        #create_prc
+        #print("OK", plateform)
+        st.sidebar.download_button(
+            "Download corpus",
+            #on_click = zipfile_creator(),
+            file_name="corpus.zip",
+            mime="application/zip",
+            data=convert_csv_to_txt
+        )
+
+
+
+
     with tab1 :
         #st.divider()
         placeholder = st.empty()
         container = st.container()
 
         with placeholder.container():
+            df = df.drop_duplicates(subset=["author", "text", "date"])
             st.write("Nombre de textes: ", len(df))
             visualisation.display_dataframe(data=df)
             #timeserie = st.pyplot(fig)
-            st.divider()
 
-            ### Option pour le regoupement
-            with st.sidebar.form("grouped_posts"):
-                st.write("Opérer un regroupement")
-                st.info("Entrez les valeurs de votre choix pour effectuer un regroupement.", icon="ℹ️")
-                number = st.number_input('Nombre minimum de mot')
-                minute_interval = st.number_input("Définir l'intervale de temps (en minute)",value=0) #on concatène tous les textes publiés dans cet intervale
-                submit = st.form_submit_button("Regrouper les posts")
+                #st.session_state.corpus = True
 
 
 
-            #with st.form("create_corpus"): #permet de choisir les données du CTX
-                #print("error 1")
-            st.markdown("# Créer un corpus Prospéro")
-            st.info("Les textes sont créés en prenant en compte les valeur de regroupement (voir \"Opérer un regroupement\"). Si les valeurs sont à zéro, aucun regroupement n\'est effectué (i.e. on crée un fichier par tweet.).\nLes fichiers sont sauvegardés dans un dossier zip", icon="ℹ️")
-
-            name = st.selectbox("auteur", ["author"])
-            #narrateur = st.selectbox("narrateur", [""])
-            #destinataire = st.selectbox("destinataire", list_col_name)
-            type_support = st.selectbox("support", ("Twitter", "Twitch", "Instagram","Youtube"))
-            nom_support = st.text_input("Nom de l'émission", value="Tapez le nom de l'émission")
-            observation = st.selectbox("observation", [x for x in df.columns])
-            folder_path = st.text_input("Coller l'adresse du dossier de récupération")
-            st.info("L\'adresse ci-dessus est utilisée pour créer le prc.", icon="ℹ️")
 
 
-            st.markdown("## Création du corpus Prospéro")
-
-            # Every form must have a submit button.
-            submitted = st.button("Créer le corpus")
-
-            if submitted :
-                #print(df)
-                new_df= df.copy()
-                new_df = new_df.loc[~(new_df["text"].isna())]
-
-                #st.sidebar.write('You selected `%s`' % filename)
-                convert_csv_to_txt = convert.ParseCsv.write_prospero_files(new_df, save_dir=folder_path, nom_support=nom_support, type_support=type_support, observation= observation)
-                #create_prc
-                print("OK")
-                st.download_button(
-                    "Download corpus",
-                    #on_click = zipfile_creator(),
-                    file_name="corpus.zip",
-                    mime="application/zip",
-                    data=convert_csv_to_txt
-                )
     with tab2 :
         placeholder2 = st.empty()
         container2 = st.container()
@@ -238,8 +365,7 @@ try:
             show_text = visualisation.display_text(data=df)
 
 
-
-except:
+elif st.session_state.dataframe == 0 :
     with tab1 :
         placeholder = st.empty()
         container = st.container()
@@ -255,25 +381,15 @@ except:
                 | X     | lllll| YYYY-MM-DD|
                 """
             )
-try:
-    with tab2 :
-        placeholder2 = st.empty()
-        container2 = st.container()
-        with placeholder2.container():
-            #show_text = visualisation.display_text(data=df)
-            st.markdown(
-                """
-                Ca ne marche pas
-                """
-            )
 
-except:
-    with tab2 :
-        placeholder2 = st.empty()
-        container2 = st.container()
-        with placeholder2.container():
+elif st.session_state.dataframe == -1 :
+    with tab1 :
+        placeholder = st.empty()
+        container = st.container()
+        with placeholder.container():
+            st.header("0 publication")
             st.markdown(
                 """
-                Ca ne marche pas
+                Aucune publication ne correspond aux éléments de la requête. Essayez une autre émission ou d'autre.s candidat.es
                 """
             )
