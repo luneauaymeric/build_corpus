@@ -125,6 +125,7 @@ def read_dfemission():
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/emission.csv'
     response = requests.get(url)
+    print(response)
     if response.status_code == 200:
         return  pd.read_csv(StringIO(response.text))
     else:
