@@ -11,6 +11,8 @@ import cleaning
 from cleaning import Cleaner
 import emoji
 import psql_to_stream
+import requests
+from io import StringIO
 #import streamlit as st
 #from tkinter import filedialog
 #import glob
@@ -75,9 +77,16 @@ def dic_emission_twit():
 
 
 def dic_emission_twitch():
-    dfe = pd.read_csv("liste_emission.csv")
-    dict_emission = dict(zip(dfe.emission_title, dfe.twitch_id))
-    return dict_emission
+    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/emission.csv'
+    response = requests.get(url)
+    if response.status_code == 200:
+        dfe = pd.read_csv(StringIO(response.text))
+        dict_emission = dict(zip(dfe.emission_title, dfe.twitch_id))
+        return dict_emission
+        #return pd.read_csv(StringIO(response.text))
+    else:
+        st.error("Failed to load data from GitHub.")
+        return None
 
 def dic_emission(dfe):
     #dfe = pd.read_csv("liste_emission.csv")
@@ -114,7 +123,14 @@ def download_corpus(df):
 @st.cache_data
 def read_dfemission():
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return  pd.read_csv("liste_emission.csv")
+    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/emission.csv'
+    response = requests.get(url)
+    if response.status_code == 200:
+        return  pd.read_csv(StringIO(response.text))
+    else:
+        st.error("Failed to load data from GitHub.")
+        return None
+
 
 
 @st.cache_data # évite que cette fonction soit exécutée à chaque fois
