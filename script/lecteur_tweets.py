@@ -77,7 +77,7 @@ def dic_emission_twit():
 
 
 def dic_emission_twitch():
-    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/emission.csv'
+    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/liste_emission.csv'
     response = requests.get(url)
     if response.status_code == 200:
         dfe = pd.read_csv(StringIO(response.text))
@@ -123,11 +123,11 @@ def download_corpus(df):
 @st.cache_data
 def read_dfemission():
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/emission.csv'
+    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/liste_emission.csv'
     response = requests.get(url)
-    print(response)
     if response.status_code == 200:
-        return  pd.read_csv(StringIO(response.text))
+        return   pd.read_csv(StringIO(response.text))
+        #return pd.read_csv(StringIO(response.text))
     else:
         st.error("Failed to load data from GitHub.")
         return None
