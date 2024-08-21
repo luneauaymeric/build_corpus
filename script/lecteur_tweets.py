@@ -201,7 +201,7 @@ else:
     dic_emission, list_candidat, list_channel = dic_emission(dfe)
     st.sidebar.markdown("## Requête vers la base de données")
     st.sidebar.info("Les variables ci-dessous permettent d'obtenir un tableau correspondant aux options choisies.", icon="ℹ️")
-    plateform = st.sidebar.selectbox("Choix de la plateforme", ("Youtube","Twitch", "Twitter"))
+    plateform = st.sidebar.selectbox("Choix de la plateforme", ("Twitch", "Twitter","Youtube"))
     #platform2 = st.multiselect("Quelle plateforme vous intéresse ?", ["Twitch", "Twitter", "Youtube"])
     #nom_emission2 = st.selectbox("Quelle(s) émission(s)", [x for x in dic_emission])
     nom_emission3 = st.sidebar.multiselect("Choix de la ou des émission(s)", [x for x in list_channel])
