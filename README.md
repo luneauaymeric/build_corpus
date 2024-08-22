@@ -48,7 +48,7 @@ Bien sûr, on peut décider d'afficher toutes les publications liées à une pla
 #### Fonctionnement des filtres:
 Les filtres fonctionnent différemment en fonction des plateforme.
 
-Pour __Twitch__, la recherche se base sur la liste des émissions collectées ([https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/liste_emission.csv](la liste se trouve ici)) et renseignées dans Zotero. On conserve alors uniquement les émissions qui correspondent aux critères choisis. Ainsi si je choisi l'émission _Backseat_, le script opère un premier filtre en conservant uniquement les émissions dont la colonne "publication_title" contient "Backseat". Idem pour les candidat.es. On peut ensuite combiner ces deux critères : conservé uniquement les émissions _Backseat_ dans lesquelles Jadot a été invité par exemple.
+Pour __Twitch__, la recherche se base sur la liste des émissions collectées (<a href="https://github.com/luneauaymeric/build_corpus/blob/main/script/liste_emission.csv">la liste se trouve ici</a>) et renseignées dans Zotero. On conserve alors uniquement les émissions qui correspondent aux critères choisis. Ainsi si je choisi l'émission _Backseat_, le script opère un premier filtre en conservant uniquement les émissions dont la colonne "publication_title" contient "Backseat". Idem pour les candidat.es. On peut ensuite combiner ces deux critères : conservé uniquement les émissions _Backseat_ dans lesquelles Jadot a été invité par exemple.
 
 On utilise ensuite les "publication_id" des émissions correspondant aux critères de filtre pour envoyer une requête à la bases de donnée et récupérer tous les commentaires postées au moment de l'émission. Cette requête prend la forme suivante :
 
