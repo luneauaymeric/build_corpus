@@ -136,7 +136,9 @@ def read_dfemission():
 def read_markdown_file(url):
     response = requests.get(url)
     if response.status_code == 200:
-        return Path(markdown_file).read_text()
+        txt = StringIO(response.text).read()
+        print("TXT : ", txt)
+        return txt
         #return pd.read_csv(StringIO(response.text))
     else:
         return st.error("Failed to load data from GitHub.")
@@ -158,7 +160,7 @@ def init_connection():
 tab0, tab1, tab2, tab3 = st.tabs(["Read Me","Tableau", "Texte", "label"])
 with tab0:
     url = "https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/README.md"
-    readme_text = read_markdown_file(markdown_file=url)
+    readme_text = read_markdown_file(url=url)
     placeholder0 = st.empty()
     container0 = st.container()
     with placeholder0.container():
