@@ -298,7 +298,7 @@ else:
 
 
 
-st.sidebar.write(st.session_state)
+#st.sidebar.write(st.session_state)
 
 if st.session_state.dataframe == 1:
 
