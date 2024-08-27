@@ -36,6 +36,8 @@ def df_processor(data, source):
     #dg["date"] = dg.local_time.dt.date
     data["source"] = source
 
+    data = data.sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+
 
     return data
 
