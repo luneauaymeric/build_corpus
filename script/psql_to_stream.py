@@ -8,7 +8,7 @@ def connect_twitch(_conn, list_publi_id):
     print("len list_pub_id : ", list_publi_id)
     if len(list_publi_id) > 1 :
         df = _conn.query(f'SELECT ta.firstname, t.text_content, t.text_content_creation_date, t.id, t.pub_reference_id, t.person_id FROM public.twitch_comment t  JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id in {tuple(list_publi_id)}', ttl="10m")
-    else :
+    else  :
         df = _conn.query(f'SELECT ta.firstname, t.text_content, t.text_content_creation_date, t.id, t.pub_reference_id, t.person_id FROM public.twitch_comment t  JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id = \'{list_publi_id[0]}\'', ttl="10m")
     df2 = _conn.query('SELECT person_id, description FROM public.twitch_account', ttl="10m")
     print(len(df))

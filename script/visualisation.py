@@ -57,3 +57,32 @@ def tracer_graphique(data, d):
 @st.cache_data
 def display_dataframe(data):
     st.dataframe(data)
+
+
+def display_quote1(data):
+    index = st.session_state.count
+    print(index)
+    if 'user_screen_name' in data.columns:
+        st.write('__Name:__ ', data['user_screen_name'].iloc[index])
+    elif 'author' in data.columns:
+        st.write('__Name:__ ', data['author'].iloc[index])
+
+    if "User_status" in data.columns:
+        st.write('__Statut:__ ', data['User_status'].iloc[index])
+    else:
+        pass
+    #st.write(x)
+    if "reply_to" in data.columns:
+        if data.retweeted_id.isnull().iloc[n] == False:
+            st.write('__retweet de :__ ', data['retweeted_user_id'].iloc[index])
+        else:
+            pass
+    else:
+        pass
+    if "local_time" in data.columns:
+        st.write('__Date:__ ', data['local_time'].iloc[index])
+    else:
+        pass
+    #st.write('Organ: ', tweets['Organ'].iloc[n])
+    st.write(data.text.iloc[index])
+    st.divider()

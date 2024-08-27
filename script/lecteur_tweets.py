@@ -22,6 +22,30 @@ from io import StringIO
 
 ### Définition des fonctions
 
+
+# def display_quote():
+#     quote = st.session_state.quotes[st.session_state.count]
+#     st.write(quote)
+
+# def display_quote_df(df):
+#     quote = df.text.iloc[st.session_state.count]
+#     st.write(quote)
+
+def next_quote(df):
+    print("next : ", st.session_state.count)
+    if st.session_state.count + 1 >= len(df):
+        st.session_state.count = 0
+    else:
+        st.session_state.count += 1
+
+def previous_quote():
+    print("previous : ", st.session_state.count)
+    if st.session_state.count > 0:
+        st.session_state.count = st.session_state.count - 1
+    else:
+        pass
+
+
 # Fonction pour afficher les "topics disponibles"
 def dic_emission_twit():
     # dfe = pd.read_csv("data-1718699997549.csv")
@@ -155,9 +179,15 @@ def init_connection():
     return st.connection("postgresql", type="sql")
 
 
+def rebase_count():
+    st.session_state.count = 0
+
+if 'count' not in st.session_state:
+    st.session_state.count = 0
+
 ### Front hand
 
-tab0, tab1, tab2, tab3 = st.tabs(["Read Me","Tableau", "Texte", "label"])
+tab0, tab1, tab2, tab3 = st.tabs(["Read Me","Tableau", "Tous les textes", "Texte par texte"])
 with tab0:
     url = "https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/README.md"
     readme_text = read_markdown_file(url=url)
@@ -176,24 +206,9 @@ with tab2:
     container2 = st.container()
 with tab3:
 
-    st.header("Label selected text")
-    st.markdown(
-        """
-        To add a new annotation
-
-        1. Pick a label
-        2. Highlight text with cursor
-
-        To delete an annotation
-
-        1. Click highlighted text
-        2. Press backspace
-
-        Finally, click `Update` to propagate changes to streamlit.
-        """
-    )
     placeholder3 = st.empty()
     container3 = st.container()
+
 
 
 #  Chargement du CSV contenant les tweets (un seul fichier à la fois)
@@ -238,11 +253,11 @@ else:
     dic_emission, list_candidat, list_channel = dic_emission(dfe)
     st.sidebar.markdown("## Requête vers la base de données")
     st.sidebar.info("Les variables ci-dessous permettent d'obtenir un tableau correspondant aux options choisies.", icon="ℹ️")
-    plateform = st.sidebar.selectbox("Choix de la plateforme", ("Twitch", "Twitter","Youtube"))
+    plateform = st.sidebar.selectbox("Choix de la plateforme", ("Twitch", "Twitter","Youtube"), on_change=rebase_count)
     #platform2 = st.multiselect("Quelle plateforme vous intéresse ?", ["Twitch", "Twitter", "Youtube"])
     #nom_emission2 = st.selectbox("Quelle(s) émission(s)", [x for x in dic_emission])
-    nom_emission3 = st.sidebar.multiselect("Choix de la ou des émission(s)", [x for x in list_channel])
-    nom_candidat = st.sidebar.multiselect("Choix d'un.e ou de plusieurs candidat.es", [x for x in list_candidat])
+    nom_emission3 = st.sidebar.multiselect("Choix de la ou des émission(s)", [x for x in list_channel],on_change=rebase_count)
+    nom_candidat = st.sidebar.multiselect("Choix d'un.e ou de plusieurs candidat.es", [x for x in list_candidat], on_change=rebase_count)
     #ask_bdd = st.sidebar.button("Envoyer la requête")
 
 
@@ -275,8 +290,8 @@ else:
                 pass
     print(liste_hashtag)
 
-
     _conn = init_connection()
+
     #conn = st.connection("postgresql", type="sql", url="postgresql://Aymeric:jhsd4098ug4k3@postgres:5432/dbname")
     #plateform = st.sidebar.selectbox("Quelle(s) plateforme(s) vous intéresse ?",("Twitch", "Twitter", "Youtube"))
 
@@ -318,10 +333,17 @@ else:
 
 
 
-#st.sidebar.write(st.session_state)
+st.sidebar.write(st.session_state)
+
+
+
+
+
 
 if st.session_state.dataframe == 1:
 
+    #if 'quotes' not in st.session_state:
+        #st.session_state.quotes = [x for x in df.text]
 
     st.sidebar.divider()
     st.sidebar.markdown("## Regrouper les posts")
@@ -401,6 +423,27 @@ if st.session_state.dataframe == 1:
             #show_text = visualisation.display_text(data=df)
             show_text = visualisation.display_text(data=df)
 
+    with tab3 :
+        placeholder3 = st.empty()
+        container3 = st.container()
+        with placeholder3.container():
+            #show_text = visualisation.display_text(data=df)
+            visualisation.display_quote1(df)
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if st.button("⏮️ Previous"):
+                    previous_quote()
+                else:
+                    pass
+
+            with col2:
+                if st.button("Next ⏭️"):
+                    next_quote(df)
+                else:
+                    pass
+
+
 
 elif st.session_state.dataframe == 0 :
     with tab1 :
@@ -419,11 +462,45 @@ elif st.session_state.dataframe == 0 :
                 """
             )
 
+    with tab3:
+
+        placeholder3 = st.empty()
+        container3 = st.container()
+        with placeholder3.container():
+            st.header("Label selected text")
+            st.markdown(
+                """
+                To add a new annotation
+
+                1. Pick a label
+                2. Highlight text with cursor
+
+                To delete an annotation
+
+                1. Click highlighted text
+                2. Press backspace
+
+                Finally, click `Update` to propagate changes to streamlit.
+                """
+            )
+
 elif st.session_state.dataframe == -1 :
     with tab1 :
         placeholder = st.empty()
         container = st.container()
         with placeholder.container():
+            st.header("0 publication")
+            st.markdown(
+                """
+                Aucune publication ne correspond aux éléments de la requête. Essayez une autre émission ou d'autre.s candidat.es
+                """
+            )
+
+    with tab3:
+
+        placeholder3 = st.empty()
+        container3 = st.container()
+        with placeholder3.container():
             st.header("0 publication")
             st.markdown(
                 """
