@@ -56,6 +56,7 @@ def tracer_graphique(data, d):
 
 @st.cache_data
 def display_dataframe(data):
+    data = data.sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
     st.dataframe(data)
 
 
