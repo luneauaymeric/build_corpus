@@ -45,6 +45,20 @@ def previous_quote():
     else:
         pass
 
+def first_quote():
+    print("previous : ", st.session_state.count)
+    if st.session_state.count > 0:
+        st.session_state.count = 0
+    else:
+        pass
+
+def last_quote(df):
+    print("next : ", st.session_state.count)
+    if st.session_state.count + 1 >= len(df):
+        st.session_state.count = 0
+    else:
+        st.session_state.count = len(df) - 1
+
 
 # Fonction pour afficher les "topics disponibles"
 def dic_emission_twit():
@@ -429,17 +443,29 @@ if st.session_state.dataframe == 1:
         with placeholder3.container():
             #show_text = visualisation.display_text(data=df)
             visualisation.display_quote1(df)
-            col1, col2 = st.columns(2)
+            col1, col2, col3, col4 = st.columns(4)
 
             with col1:
+                if st.button("⏮️ ⏮️ First"):
+                    first_quote()
+                else:
+                    pass
+
+            with col2:
                 if st.button("⏮️ Previous"):
                     previous_quote()
                 else:
                     pass
 
-            with col2:
+            with col3:
                 if st.button("Next ⏭️"):
                     next_quote(df)
+                else:
+                    pass
+
+            with col4:
+                if st.button("Last ⏭️ ⏭️"):
+                    last_quote(df)
                 else:
                     pass
 
