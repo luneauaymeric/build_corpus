@@ -118,10 +118,10 @@ class ParseCsv:
     #             self.articles[key]['source_type'] = 'unknown source'
     #             self.articles[key]['root'] = 'FACTIVA'
     #@st.cache_data
-    def write_prospero_files(self, save_dir, nom_support, type_support, cleaning=False):
+    def write_prospero_files(self, save_dir, observation, cleaning=False):
 
         """for each article, write txt, csv and ctx in a given directory"""
-        dict_date = {"10":"A", "11":"B", "12":"C"}
+        dict_mois = {"10":"A", "11":"B", "12":"C"}
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
             dictio_elem = "/home/aymeric/corpus/0_dic/dic_elementaires/"
@@ -133,7 +133,6 @@ class ParseCsv:
             list_path_file =[]
 
             for _, row in self.iterrows():
-
                 jour = str(row["day"])
                 if len(jour) == 1:
                     jour_prospero = "0"+jour
@@ -148,24 +147,33 @@ class ParseCsv:
                 annee = str(row["year"])
                 date_prospero = "%s/%s/%s" % (jour_prospero, mois_prospero, annee[2:])
                 date_ctx = "%s/%s/%s" % (jour_prospero, mois, annee)
-                filepath = file_name(date_prospero,
-                                     "TWIT",
-                                     save_dir, list_path_file)
+                heure_pub = str(row["hour"])
+                rac = str(row["source"])
+                if rac == "Twitch":
+                    rac = "TWIC"
+                elif rac == "Twitter":
+                    rac = "TWIT"
+                else:
+                    rac = rac[0:4].upper()
+
+                date = "".join(reversed(date_prospero.split("/")))
+                filepath = "%s%s%s%s" % (rac, date, "_", _)
+
+                #filepath = file_name(date_prospero, rac, save_dir, list_path_file)
                 #path = os.path.join(filepath + ".txt")
                 path = filepath+".txt"
                 list_path_file.append(filepath)
-                #print(path)
+
                 prc_txt.append(f"{save_dir}{path}")
 
-
-                auteur = str(row["user_screen_name"])
+                auteur = str(row["author"])
                 title = f"Posts de {auteur}"
                 #titulo = title + "\r\n"
                 #ponto = ".\r\n"
                 texto = str(row["text"])
                 part_of_text = "\r\n.\r\n".join([title, texto])
                 part_of_text = emoji.demojize(part_of_text, language='fr')
-                C = Cleaner(part_of_text.encode("utf-8"), options="ua")
+                C = Cleaner(part_of_text.encode("utf-8"), options="uasdhtpcef")
                 C_latin = bytes(C.content, 'latin-1')
                 zip_file.writestr(path, C_latin)
 
@@ -174,20 +182,20 @@ class ParseCsv:
             #pg_se = f'PG: {row["PG"]} / SE: {row["SE"]} '.replace("\\", " ")
                 ctx = ["fileCtx0005",
                         title,
-                        str(row["user_screen_name"]),
+                        str(row["author"]),
                         "",
                         "",
                         date_ctx,
-                        nom_support,
-                        type_support,
-                        "",
-                        "",
+                        str(row["source"]),
+                        "Réseau social",
+                        observation,
+                        "",# nom de l'emission de référence
                         "",
                         "Processed by Tiresias on %s" % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                         "",
                         "n",
                         "n",
-                        str(row["hour"])
+                        f"REF_HEURE:{heure_pub}" # heure de publication
                         ] #hour ?]
 
                 ctx = "\r\n".join(ctx)
@@ -199,6 +207,7 @@ class ParseCsv:
 
             prc_txt.append("ENDFILE")
             prc_file = "\r\n".join(prc_txt)
+            nom_support= "corpus"
             path_prc = nom_support.lower().replace(" ","_")+".prc"
             zip_file.writestr(path_prc, prc_file.encode('latin-1'))
         buf = zip_buffer.getvalue()
