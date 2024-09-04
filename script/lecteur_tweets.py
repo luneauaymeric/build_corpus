@@ -306,7 +306,7 @@ else:
 
     _conn = init_connection()
 
-    #conn = st.connection("postgresql", type="sql", url="postgresql://Aymeric:jhsd4098ug4k3@postgres:5432/dbname")
+    
     #plateform = st.sidebar.selectbox("Quelle(s) plateforme(s) vous intéresse ?",("Twitch", "Twitter", "Youtube"))
 
 # Perform query.
