@@ -306,7 +306,7 @@ else:
 
     _conn = init_connection()
 
-    
+
     #plateform = st.sidebar.selectbox("Quelle(s) plateforme(s) vous intéresse ?",("Twitch", "Twitter", "Youtube"))
 
 # Perform query.
@@ -430,12 +430,12 @@ if st.session_state.dataframe == 1:
 
 
 
-    with tab2 :
-        placeholder2 = st.empty()
-        container2 = st.container()
-        with placeholder2.container():
-            #show_text = visualisation.display_text(data=df)
-            show_text = visualisation.display_text(data=df)
+    # with tab2 :
+    #     placeholder2 = st.empty()
+    #     container2 = st.container()
+    #     with placeholder2.container():
+    #         #show_text = visualisation.display_text(data=df)
+    #         show_text = visualisation.display_text(data=df)
 
     with tab3 :
         placeholder3 = st.empty()
