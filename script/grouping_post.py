@@ -22,13 +22,17 @@ def df_processor(data, source):
     data["yearmonth"] = pd.to_datetime(data.yearmonth, format='%Y-%m')
 
     if 'text' in data.columns:
-
     #On compte le nombre de mot pour ensuite filtrer les texts en fonction de leur longueur
         data["length_text"] = data.text.str.len()
         data["split_txt"] = data.text.str.split(" ")
         data["nb_word"]= data.split_txt.str.len()
     elif 'text_content' in data.columns:
         data = data.rename(columns={"text_content": "text"})
+        data["length_text"] = data.text.str.len()
+        data["split_txt"] = data.text.str.split(" ")
+        data["nb_word"]= data.split_txt.str.len()
+    elif 'content' in data.columns:
+        data = data.rename(columns={"content": "text"})
         data["length_text"] = data.text.str.len()
         data["split_txt"] = data.text.str.split(" ")
         data["nb_word"]= data.split_txt.str.len()
