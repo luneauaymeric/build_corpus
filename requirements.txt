@@ -3,3 +3,5 @@ streamlit
 matplotlib
 datetime
 emoji
+psycopg2-binary
+sqlalchemy
