@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   streamlit:
     build:
@@ -11,4 +9,4 @@ services:
       - .:/app
     environment:
       - PYTHONUNBUFFERED=1
-    command: streamlit run script/app.py  
+    command: streamlit run script/app.py

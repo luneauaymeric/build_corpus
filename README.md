@@ -8,9 +8,11 @@ Application inspirée de :
 
 - Tiresias : [https://github.com/josquindebaz/Tiresias](https://github.com/josquindebaz/Tiresias)
 
-## Installation locale avec Docker
+## Installation avec Docker
 
 ### Linux
+
+#### En local
 
 - Mettez vous sur le dossier où vous voulez mettre le dépôt local
 - Faites ```git clone [app_URL]``` (il faut avoir git installé)
@@ -19,6 +21,17 @@ Application inspirée de :
 - Si vous voulez changer la porte de l'application par défaut (8501), copiez le fichier env.sample, renommez-le en .env et changez le paramètre
 - faites ```docker compose up --build``` (il faut avoir docker installé)
 - Allez sur l'adresse indiqué sur le terminal (par défaut: http://localhost:8501)
+
+#### En production
+
+- Mettez vous sur le dossier où vous voulez mettre le dépôt local
+- Faites ```git clone [app_URL]``` (il faut avoir git installé)
+- Faites une copie du dossier streamlit.sample et rennomez-le en .streamlit
+- À l'intérieur de ce dossier, configurez le fichier secrets.toml
+	- si l'app et la bdd sont sur le même serveur, le host doit être le nom du docker où tourne la bdd et il faut ajouter l'app au network où tourne la bdd
+- Si vous voulez changer la porte de l'application par défaut (8501), copiez le fichier env.sample, renommez-le en .env et changez le paramètre
+- faites ```docker compose up --build``` (il faut avoir docker installé)
+- Configurez le proxy
 
 ## Fonctionnement
 
