@@ -29,6 +29,15 @@ Application inspirée de :
 - Faites une copie du dossier streamlit.sample et rennomez-le en .streamlit
 - À l'intérieur de ce dossier, configurez le fichier secrets.toml
 	- si l'app et la bdd sont sur le même serveur, le host doit être le nom du docker où tourne la bdd et il faut ajouter l'app au network où tourne la bdd
+	- exemple:
+		[connections.postgresql]
+		dialect = "postgresql"
+		host = "prosopub_db"
+		port = "5432" #attention, en l'occurrence c'est la porte interne au docker
+		database = "[DATABASE_NAME]"
+		username = "[USERNAME]"
+		password = "[PASSWORD]"
+
 - Si vous voulez changer la porte de l'application par défaut (8501), copiez le fichier env.sample, renommez-le en .env et changez le paramètre
 - faites ```docker compose up --build``` (il faut avoir docker installé)
 - Configurez le proxy
