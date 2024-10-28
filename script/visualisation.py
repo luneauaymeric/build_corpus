@@ -27,6 +27,9 @@ def display_text(data):
             st.write('__Date:__ ', data['local_time'].iloc[n])
         else:
             pass
+
+        st.write('__Emission:__', data['Publication Title'].iloc[n])
+        st.write('__Candidat.e:__', data['Guest'].iloc[n])
         #st.write('Organ: ', tweets['Organ'].iloc[n])
         st.write(x)
         st.divider()
@@ -56,7 +59,7 @@ def tracer_graphique(data, d):
 
 @st.cache_data
 def display_dataframe(data):
-    data = data.sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+    data = data[["author", "text", "local_time", "source","Publication Title","Guest"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
     st.dataframe(data)
 
 

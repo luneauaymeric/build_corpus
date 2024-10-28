@@ -201,7 +201,7 @@ if 'count' not in st.session_state:
 
 ### Front hand
 
-tab0, tab1, tab2, tab3 = st.tabs(["Read Me","Tableau", "Tous les textes", "Texte par texte"])
+tab0, tab1, tab3 = st.tabs(["Read Me","Tableau", "Texte par texte", ])
 with tab0:
     url = "https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/README.md"
     readme_text = read_markdown_file(url=url)
@@ -215,9 +215,7 @@ with tab1 :
     placeholder = st.empty()
     container = st.container()
 
-with tab2:
-    placeholder2 = st.empty()
-    container2 = st.container()
+
 with tab3:
 
     placeholder3 = st.empty()
@@ -326,6 +324,7 @@ else:
         df0 = psql_to_stream.connect_youtube(_conn, nom_candidat, nom_emission3)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Youtube")
+            #df = df.merge(dfe[["twitch_id", "Guest", "Publication Title"]], on = ["twitch_id"], how="left")
             nb_row = len(df)
         else:
             nb_row= 0
@@ -347,7 +346,7 @@ else:
 
 
 
-st.sidebar.write(st.session_state)
+#st.sidebar.write(st.session_state)
 
 
 
