@@ -13,6 +13,7 @@ import emoji
 import psql_to_stream
 import requests
 from io import StringIO
+import re
 #import streamlit as st
 #from tkinter import filedialog
 #import glob
@@ -289,8 +290,7 @@ else:
     else:
         pass
 
-    list_publi_id = [x for x in dfe.twitch_id.loc[~dfe["twitch_id"].isna()]]
-    print(list_publi_id)
+    
 
     liste_hashtag = []
     for x in dfe.hashtag.loc[~dfe.hashtag.isna()]:
@@ -309,6 +309,8 @@ else:
 
 # Perform query.
     if plateform == "Twitch":
+        list_publi_id = [x for x in dfe.twitch_id.loc[~dfe["twitch_id"].isna()]]
+        print(list_publi_id)
         df0 = psql_to_stream.connect_twitch(_conn, list_publi_id)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Twitch")
@@ -321,6 +323,17 @@ else:
 
 
     elif plateform == "Youtube":
+        list_publi_yt = [x for x in dfe.list_youtube_id.loc[~dfe["list_youtube_id"].isna()]]
+        print("YOUTUBE : ", list_publi_yt)
+        list_publi_id = []
+        for x in list_publi_yt:
+            x = x.replace("[","").replace("]","").replace("'", "").split(",")
+            print(x)
+            print(type(x))
+            for y in x:
+                list_publi_id.append(y)
+        print(list_publi_yt)
+        
         df0 = psql_to_stream.connect_youtube(_conn, nom_candidat, nom_emission3)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Youtube")
@@ -334,6 +347,14 @@ else:
         df0 = psql_to_stream.connect_twitter(_conn, liste_hashtag)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Twitter")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
+    elif plateform == "Instagram":
+        df0 = psql_to_stream.connect_instagram(_conn, liste_hashtag)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Instagram")
             nb_row = len(df)
         else:
             nb_row= 0
@@ -421,7 +442,8 @@ if st.session_state.dataframe == 1:
             df = df.drop_duplicates(subset=["author", "text", "date"])
             st.write("Nombre de textes: ", len(df))
             visualisation.display_dataframe(data=df)
-            #timeserie = st.pyplot(fig)
+            fig = visualisation.tracer_graphique(data=df, d = "Jour")
+            timeserie = st.pyplot(fig)
 
                 #st.session_state.corpus = True
 
