@@ -59,7 +59,10 @@ def tracer_graphique(data, d):
 
 @st.cache_data
 def display_dataframe(data):
-    data = data[["author", "text", "local_time", "source","Publication Title","Guest"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+    try:
+        data = data[["author", "text", "local_time", "source","Publication Title","Guest"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+    except:
+         data = data[["author", "text", "local_time", "source"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
     st.dataframe(data)
 
 
