@@ -46,84 +46,27 @@ def connect_twitter(_conn, liste_hashtag):
     return df
     #st.dataframe(data=df)
 
-st.cache_data
-def connect_youtube(_conn, nom_candidat, nom_emission3):
-    nb_post_emission = 0
-    nb_post_candidat = 0
-    if len(nom_emission3) + len(nom_candidat) > 0:
-        print("nom emission : ", nom_emission3)
-        if len(nom_emission3) > 1 :
-            pattern_emission = '|'.join(nom_emission3)
-            df0 = _conn.query(f'SELECT publication_id, title, description, channel_name FROM public.youtube_post WHERE title SIMILAR TO \'%({pattern_emission})%\'', ttl="10m")
-            nb_post_emission = len(df0)
-        elif len(nom_emission3) == 1 :
-            pattern_emission = f'%{nom_emission3[0]}%'
-            df0 = _conn.query(f'SELECT publication_id, title, description, channel_name FROM public.youtube_post WHERE title LIKE \'{pattern_emission}\'', ttl="10m")
-            nb_post_emission = len(df0)
+@st.cache_data
+def connect_youtube(_conn, list_publi_id):
+    print("len list_pub_id : ", tuple(list_publi_id))
+    if len(list_publi_id) > 1 :
+        df = _conn.query(f'SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id in {tuple(list_publi_id)}', ttl="10m")
+    else :
+        df = _conn.query(f'SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id = \'{list_publi_id[0]}\'', ttl="10m")
+    dict_comment_id = dict(zip(df.comment_id, df.id))
+    dict_comment_person = dict(zip(df.comment_id, df.person_id))
+    dict_comment_person_name = dict(zip(df.comment_id, df.name))
+    df["id_reply"] = df.isReplyTo.map(dict_comment_id.get)
+    df["person_id_reply"] = df.isReplyTo.map(dict_comment_person.get)
+    df["person_name_reply"] = df.isReplyTo.map(dict_comment_person_name.get)
 
+    new_column_name = {"name":"author", "text_content":"text", "date":"local_time"}
+    df= df.rename(columns = new_column_name)
 
-        print("nom candidat : ", nom_candidat)
-        if len(nom_candidat) > 1 :
-            pattern_candidat = '|'.join(nom_candidat)
-            df1 = _conn.query(f'SELECT publication_id, title, description, channel_name FROM public.youtube_post WHERE title SIMILAR TO \'%({pattern_candidat})%\'', ttl="10m")
-            nb_post_candidat = len(df1)
-        elif len(nom_candidat) == 1 :
-            pattern_candidat = f'%{nom_candidat[0]}%'
-            df1 = _conn.query(f'SELECT publication_id, title, description, channel_name FROM public.youtube_post WHERE title LIKE \'{pattern_candidat}\'', ttl="10m")
-            nb_post_candidat = len(df1)
-
-
-
-        if nb_post_candidat>0  and nb_post_emission >0:
-            print("taille de df0 et df1: ", len(df0), len(df1))
-            df01 = df0.merge(df1, on = ["publication_id" , "title", "description", "channel_name" ], how = "inner")
-
-        elif nb_post_candidat>0  and nb_post_emission == 0:
-            print("taille de df1: ", len(df1))
-            df01= df1.copy()
-        elif nb_post_candidat==0  and nb_post_emission >0:
-            print("taille de df0: ", len(df0))
-            df01 = df0.copy()
-
-    else:
-        df01 = _conn.query(f'SELECT publication_id, title, description, channel_name FROM public.youtube_post', ttl="10m")
-
-    print("taille de df01: ",len(df01))
-    if len(df01) >0:
-        list_publi_id = [x for x in df01.publication_id]
-
-
-        if len(list_publi_id) > 1 :
-            df = _conn.query(f'SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id in {tuple(list_publi_id)}', ttl="10m")
-        else :
-            df = _conn.query(f'SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id = \'{list_publi_id[0]}\'', ttl="10m")
-
-        print(df.columns)
-        print(df01.columns)
-        #df = _conn.query('SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id', ttl="10m")
-        #df1= _conn.query('SELECT DISTINCT comment_id, publication_id, "isReplyTo" FROM public.youtube_comment WHERE  "isReplyTo" NOT LIKE \'nan\'', ttl="10m")
-        #df11= _conn.query('SELECT DISTINCT person_id, id, comment_id FROM public.youtube_comment WHERE  "isReplyTo" LIKE \'nan\'', ttl="10m")
-        dict_comment_id = dict(zip(df.comment_id, df.id))
-        dict_comment_person = dict(zip(df.comment_id, df.person_id))
-        dict_comment_person_name = dict(zip(df.comment_id, df.name))
-        df["id_reply"] = df.isReplyTo.map(dict_comment_id.get)
-        df["person_id_reply"] = df.isReplyTo.map(dict_comment_person.get)
-        df["person_name_reply"] = df.isReplyTo.map(dict_comment_person_name.get)
-
-        dict_title_post = dict(zip(df01.publication_id, df01.title))
-        dict_desc_post = dict(zip(df01.publication_id, df01.description))
-        dict_channel = dict(zip(df01.publication_id, df01.channel_name))
-
-
-        df["channel"] = df.publication_id.map(dict_channel.get)
-        df["title_post"] = df.publication_id.map(dict_title_post.get)
-        df["description_post"] = df.publication_id.map(dict_desc_post.get)
-        new_column_name = {"name":"author", "text_content":"text", "date":"local_time"}
-        df= df.rename(columns = new_column_name)
-    else:
-        data = {"author":[], "text":[], "local_time":[]}
-        df = pd.DataFrame(data)
+    
     return df
+
+
 
 # Print results.
 #st.dataframe(data=df)postgresql://username:password@postgres:5432/dbname

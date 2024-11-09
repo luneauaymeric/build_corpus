@@ -27,11 +27,14 @@ def display_text(data):
             st.write('__Date:__ ', data['local_time'].iloc[n])
         else:
             pass
+
+        st.write('__Emission:__', data['Publication Title'].iloc[n])
+        st.write('__Candidat.e:__', data['Guest'].iloc[n])
         #st.write('Organ: ', tweets['Organ'].iloc[n])
         st.write(x)
         st.divider()
 
-# Fonction pour tracer la série temporelle
+
 # Fonction pour tracer la série temporelle
 @st.cache_data
 def tracer_graphique(data, d):
@@ -46,17 +49,20 @@ def tracer_graphique(data, d):
             j.set_index("date")["id"].resample(scale[d]).size().plot(ax=ax,style=".-")
         plt.legend(leg)
     else:
-        #data.set_index("date")["id"].resample(scale[d]).size().plot(ax=ax,style=".-")
-        plt.plot(df1.local_time, df1.nb)
-    plt.title("Evolution temporelle du dataframe original")
-    plt.xlabel("Temps (par %s)"%d)
-    plt.ylabel("Nombre de tweets")
+        data.set_index("local_time")["id"].resample(scale[d]).size().plot(ax=ax,style=".-")
+        #plt.plot(df1.local_time, df1.nb)
+    plt.title("Distribution temporelle des publications")
+    plt.xlabel("Date (par %s)"%d)
+    plt.ylabel("Nombre de poste")
     plt.tight_layout()
     return fig
 
 @st.cache_data
 def display_dataframe(data):
-    data = data.sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+    try:
+        data = data[["author", "text", "local_time", "source","Publication Title","Guest"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+    except:
+         data = data[["author", "text", "local_time", "source"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
     st.dataframe(data)
 
 
@@ -85,5 +91,14 @@ def display_quote1(data):
     else:
         pass
     #st.write('Organ: ', tweets['Organ'].iloc[n])
+
+    if "Publication Title" in data.columns:
+        st.write('__Emission:__', data['Publication Title'].iloc[index])
+    else:
+        pass
+    if "Guest" in data.columns:
+        st.write('__Candidat.e:__', data['Guest'].iloc[index])
+    else:
+        pass
     st.write(data.text.iloc[index])
     st.divider()
