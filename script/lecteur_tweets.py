@@ -162,14 +162,8 @@ def download_corpus(df):
 @st.cache_data
 def read_dfemission():
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/liste_emission.csv'
-    response = requests.get(url)
-    if response.status_code == 200:
-        return   pd.read_csv(StringIO(response.text))
-        #return pd.read_csv(StringIO(response.text))
-    else:
-        st.error("Failed to load data from GitHub.")
-        return None
+    return   pd.read_csv("liste_emission.csv", sep = ",")
+
 
 @st.cache_data
 def read_markdown_file(url):
@@ -323,24 +317,26 @@ else:
 
 
     elif plateform == "Youtube":
-        list_publi_yt = [x for x in dfe.list_youtube_id.loc[~dfe["list_youtube_id"].isna()]]
-        print("YOUTUBE : ", list_publi_yt)
-        list_publi_id = []
-        for x in list_publi_yt:
-            x = x.replace("[","").replace("]","").replace("'", "").split(",")
-            print(x)
-            print(type(x))
-            for y in x:
-                list_publi_id.append(y)
-        print(list_publi_yt)
+        dfe = dfe.loc[~dfe["list_youtube_id"].isna()]
+        dfe["list_youtube_id"] = dfe["list_youtube_id"].str.split("|")
+        dfexplode = dfe.explode("list_youtube_id")
+        list_publi_id = [x for x in dfexplode.list_youtube_id]
+
+        print('dfeexplode', len(dfexplode), dfexplode.columns)
         
-        df0 = psql_to_stream.connect_youtube(_conn, nom_candidat, nom_emission3)
+        
+        df0 = psql_to_stream.connect_youtube(_conn, list_publi_id)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Youtube")
             #df = df.merge(dfe[["twitch_id", "Guest", "Publication Title"]], on = ["twitch_id"], how="left")
             nb_row = len(df)
+            print(df.columns)
+            df["publication_id"] = df.publication_id.astype("str")
+            df = df.merge(dfexplode[["list_youtube_id", "Publication Title", "Publisher", "Guest"]].rename(columns={"list_youtube_id":"publication_id"}), on = ["publication_id"], how='left')
         else:
             nb_row= 0
+        
+
 
 
     elif plateform == "Twitter":
