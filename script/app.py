@@ -162,7 +162,7 @@ def download_corpus(df):
 @st.cache_data
 def read_dfemission():
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return   pd.read_csv("liste_emission.csv", sep = ",")
+    return   pd.read_csv("./liste_emission.csv", sep = ",")
 
 
 @st.cache_data
