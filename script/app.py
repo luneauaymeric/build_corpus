@@ -13,6 +13,7 @@ import emoji
 import psql_to_stream
 import requests
 from io import StringIO
+import re
 #import streamlit as st
 #from tkinter import filedialog
 #import glob
@@ -161,14 +162,8 @@ def download_corpus(df):
 @st.cache_data
 def read_dfemission():
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/liste_emission.csv'
-    response = requests.get(url)
-    if response.status_code == 200:
-        return   pd.read_csv(StringIO(response.text))
-        #return pd.read_csv(StringIO(response.text))
-    else:
-        st.error("Failed to load data from GitHub.")
-        return None
+    return   pd.read_csv("liste_emission.csv", sep = ",")
+
 
 @st.cache_data
 def read_markdown_file(url):
@@ -201,7 +196,7 @@ if 'count' not in st.session_state:
 
 ### Front hand
 
-tab0, tab1, tab2, tab3 = st.tabs(["Read Me","Tableau", "Tous les textes", "Texte par texte"])
+tab0, tab1, tab3 = st.tabs(["Read Me","Tableau", "Texte par texte", ])
 with tab0:
     url = "https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/README.md"
     readme_text = read_markdown_file(url=url)
@@ -215,9 +210,7 @@ with tab1 :
     placeholder = st.empty()
     container = st.container()
 
-with tab2:
-    placeholder2 = st.empty()
-    container2 = st.container()
+
 with tab3:
 
     placeholder3 = st.empty()
@@ -291,8 +284,7 @@ else:
     else:
         pass
 
-    list_publi_id = [x for x in dfe.twitch_id.loc[~dfe["twitch_id"].isna()]]
-    print(list_publi_id)
+    
 
     liste_hashtag = []
     for x in dfe.hashtag.loc[~dfe.hashtag.isna()]:
@@ -306,11 +298,13 @@ else:
 
     _conn = init_connection()
 
-    #conn = st.connection("postgresql", type="sql", url="[username]:[password]@[ip adress]:[port number]/[database name]")
+
     #plateform = st.sidebar.selectbox("Quelle(s) plateforme(s) vous intéresse ?",("Twitch", "Twitter", "Youtube"))
 
 # Perform query.
     if plateform == "Twitch":
+        list_publi_id = [x for x in dfe.twitch_id.loc[~dfe["twitch_id"].isna()]]
+        print(list_publi_id)
         df0 = psql_to_stream.connect_twitch(_conn, list_publi_id)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Twitch")
@@ -323,18 +317,40 @@ else:
 
 
     elif plateform == "Youtube":
-        df0 = psql_to_stream.connect_youtube(_conn, nom_candidat, nom_emission3)
+        dfe = dfe.loc[~dfe["list_youtube_id"].isna()]
+        dfe["list_youtube_id"] = dfe["list_youtube_id"].str.split("|")
+        dfexplode = dfe.explode("list_youtube_id")
+        list_publi_id = [x for x in dfexplode.list_youtube_id]
+
+        print('dfeexplode', len(dfexplode), dfexplode.columns)
+        
+        
+        df0 = psql_to_stream.connect_youtube(_conn, list_publi_id)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Youtube")
+            #df = df.merge(dfe[["twitch_id", "Guest", "Publication Title"]], on = ["twitch_id"], how="left")
             nb_row = len(df)
+            print(df.columns)
+            df["publication_id"] = df.publication_id.astype("str")
+            df = df.merge(dfexplode[["list_youtube_id", "Publication Title", "Publisher", "Guest"]].rename(columns={"list_youtube_id":"publication_id"}), on = ["publication_id"], how='left')
         else:
             nb_row= 0
+        
+
 
 
     elif plateform == "Twitter":
         df0 = psql_to_stream.connect_twitter(_conn, liste_hashtag)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Twitter")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
+    elif plateform == "Instagram":
+        df0 = psql_to_stream.connect_instagram(_conn, liste_hashtag)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Instagram")
             nb_row = len(df)
         else:
             nb_row= 0
@@ -347,7 +363,7 @@ else:
 
 
 
-st.sidebar.write(st.session_state)
+#st.sidebar.write(st.session_state)
 
 
 
@@ -422,7 +438,8 @@ if st.session_state.dataframe == 1:
             df = df.drop_duplicates(subset=["author", "text", "date"])
             st.write("Nombre de textes: ", len(df))
             visualisation.display_dataframe(data=df)
-            #timeserie = st.pyplot(fig)
+            fig = visualisation.tracer_graphique(data=df, d = "Jour")
+            timeserie = st.pyplot(fig)
 
                 #st.session_state.corpus = True
 
@@ -430,12 +447,12 @@ if st.session_state.dataframe == 1:
 
 
 
-    with tab2 :
-        placeholder2 = st.empty()
-        container2 = st.container()
-        with placeholder2.container():
-            #show_text = visualisation.display_text(data=df)
-            show_text = visualisation.display_text(data=df)
+    # with tab2 :
+    #     placeholder2 = st.empty()
+    #     container2 = st.container()
+    #     with placeholder2.container():
+    #         #show_text = visualisation.display_text(data=df)
+    #         show_text = visualisation.display_text(data=df)
 
     with tab3 :
         placeholder3 = st.empty()
