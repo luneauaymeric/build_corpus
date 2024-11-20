@@ -323,6 +323,7 @@ else:
         list_publi_id = [x for x in dfexplode.list_youtube_id]
 
         print('dfeexplode', len(dfexplode), dfexplode.columns)
+        print("Test : ", list_publi_id)
         
         
         df0 = psql_to_stream.connect_youtube(_conn, list_publi_id)
