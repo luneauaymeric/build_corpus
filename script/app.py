@@ -14,6 +14,7 @@ import psql_to_stream
 import requests
 from io import StringIO
 import re
+import os
 #import streamlit as st
 #from tkinter import filedialog
 #import glob
@@ -159,10 +160,18 @@ def download_corpus(df):
         height=0,
     )
 
+
+
+
 @st.cache_data
 def read_dfemission():
+    current_directory = os.getcwd()
+    print(current_directory)
+    if 'aymeric' in current_directory:
+        return   pd.read_csv("liste_emission.csv", sep = ",")
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
-    return   pd.read_csv("./script/liste_emission.csv", sep = ",")
+    else:
+        return   pd.read_csv("./script/liste_emission.csv", sep = ",")
 
 
 @st.cache_data

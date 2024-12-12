@@ -7,9 +7,9 @@ import pandas as pd
 def connect_twitch(_conn, list_publi_id):
     print("len list_pub_id : ", list_publi_id)
     if len(list_publi_id) > 1 :
-        df = _conn.query(f'SELECT ta.firstname, t.text_content, t.text_content_creation_date, t.id, t.pub_reference_id, t.person_id FROM public.twitch_comment t  JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id in {tuple(list_publi_id)}', ttl="10m")
+        df = _conn.query(f"SELECT ta.firstname, t.text_content, t.text_content_creation_date, t.id, t.pub_reference_id, t.person_id FROM public.twitch_comment t  JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id in {tuple(list_publi_id)} AND t.text_content_creation_date > '1971-01-01 00:00:00'", ttl="10m")
     else  :
-        df = _conn.query(f'SELECT ta.firstname, t.text_content, t.text_content_creation_date, t.id, t.pub_reference_id, t.person_id FROM public.twitch_comment t  JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id = \'{list_publi_id[0]}\'', ttl="10m")
+        df = _conn.query(f"SELECT ta.firstname, t.text_content, t.text_content_creation_date, t.id, t.pub_reference_id, t.person_id FROM public.twitch_comment t  JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id = \'{list_publi_id[0]}\' AND t.text_content_creation_date > '1971-01-01 00:00:00'", ttl="10m")
     df2 = _conn.query('SELECT person_id, description FROM public.twitch_account', ttl="10m")
     print(len(df))
     dict_desc = dict(zip(df2.person_id, df2.description))
@@ -23,12 +23,12 @@ def connect_twitch(_conn, list_publi_id):
 def connect_twitter(_conn, liste_hashtag):
     if len(liste_hashtag) > 1 :
         pattern_hash = '|'.join(liste_hashtag)
-        df = _conn.query(f'SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND text_content SIMILAR TO \'%({pattern_hash})%\'', ttl="10m")
+        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND text_content SIMILAR TO \'%({pattern_hash})%\' AND pub_date > '1971-01-01 00:00:00'", ttl="10m")
     elif len(liste_hashtag) == 1 :
         pattern_hash = f'%{liste_hashtag[0]}%'
-        df = _conn.query(f'SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND text_content LIKE \'{pattern_hash}\'', ttl="10m")
+        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND text_content LIKE \'{pattern_hash}\' AND pub_date >  '1971-01-01 00:00:00'", ttl="10m")
     elif len(liste_hashtag) == 0 :
-        df = _conn.query(f'SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\'', ttl="10m")
+        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND pub_date >  '1971-01-01 00:00:00'", ttl="10m")
     df2 = _conn.query('SELECT person_id, screen_name, description FROM public.twitter_account', ttl="10m")
     dict_name = dict(zip(df2.person_id, df2.screen_name))
     dict_desc = dict(zip(df2.person_id, df2.description))
@@ -50,9 +50,9 @@ def connect_twitter(_conn, liste_hashtag):
 def connect_youtube(_conn, list_publi_id):
     print("len list_pub_id : ", tuple(list_publi_id))
     if len(list_publi_id) > 1 :
-        df = _conn.query(f'SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id in {tuple(list_publi_id)}', ttl="10m")
+        df = _conn.query(f"SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t.\"isReplyTo\", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id in {tuple(list_publi_id)} AND t.date >  '1971-01-01 00:00:00'" , ttl="10m")
     else :
-        df = _conn.query(f'SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t."isReplyTo", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id = \'{list_publi_id[0]}\'', ttl="10m")
+        df = _conn.query(f"SELECT ta.name, t.person_id, t.text_content, t.date, t.id, t.\"isReplyTo\", t.comment_id, t.publication_id   FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id = \'{list_publi_id[0]}\' t.date >  '1971-01-01 00:00:00'", ttl="10m")
     dict_comment_id = dict(zip(df.comment_id, df.id))
     dict_comment_person = dict(zip(df.comment_id, df.person_id))
     dict_comment_person_name = dict(zip(df.comment_id, df.name))
