@@ -192,7 +192,7 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(index=False).encode('utf-8')
 
-@st.cache_resource
+#@st.cache_resource
 def init_connection():
     return st.connection("postgresql", type="sql")
 
