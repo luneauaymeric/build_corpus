@@ -123,6 +123,7 @@ class ParseCsv:
         """for each article, write txt, csv and ctx in a given directory"""
         dict_mois = {"10":"A", "11":"B", "12":"C"}
         zip_buffer = io.BytesIO()
+        print("save_dir : ", save_dir)
         with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
             dictio_elem = "/home/aymeric/corpus/0_dic/dic_elementaires/"
             dictio_fic = "/home/aymeric/corpus/0_dic/Etre_fictif/EF_pesti_medialab.fic"
@@ -162,9 +163,13 @@ class ParseCsv:
                 #filepath = file_name(date_prospero, rac, save_dir, list_path_file)
                 #path = os.path.join(filepath + ".txt")
                 path = filepath+".txt"
+
                 list_path_file.append(filepath)
 
-                prc_txt.append(f"{save_dir}{path}")
+                full_filepath = f"{save_dir}/{path}".replace('//', '/')
+                
+
+                prc_txt.append(full_filepath)
 
                 auteur = str(row["author"])
                 title = f"Posts de {auteur}"
@@ -207,6 +212,7 @@ class ParseCsv:
 
             prc_txt.append("ENDFILE")
             prc_file = "\r\n".join(prc_txt)
+
             nom_support= "corpus"
             path_prc = nom_support.lower().replace(" ","_")+".prc"
             zip_file.writestr(path_prc, prc_file.encode('latin-1'))
