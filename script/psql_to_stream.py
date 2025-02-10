@@ -20,15 +20,20 @@ def connect_twitch(_conn, list_publi_id):
     return df
 
 @st.cache_data
-def connect_twitter(_conn, liste_hashtag):
-    if len(liste_hashtag) > 1 :
-        pattern_hash = '|'.join(liste_hashtag)
-        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND text_content SIMILAR TO \'%({pattern_hash})%\' AND pub_date > '1971-01-01 00:00:00'", ttl="10m")
-    elif len(liste_hashtag) == 1 :
-        pattern_hash = f'%{liste_hashtag[0]}%'
-        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND text_content LIKE \'{pattern_hash}\' AND pub_date >  '1971-01-01 00:00:00'", ttl="10m")
-    elif len(liste_hashtag) == 0 :
-        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND pub_date >  '1971-01-01 00:00:00'", ttl="10m")
+def connect_twitter(_conn, liste_hashtag_emission, liste_hashtag_candidat):
+    
+    if len(liste_hashtag_emission) > 1 :
+        pattern_hash = '|'.join(liste_hashtag_emission)
+        print("pattern = ", pattern_hash)
+        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date, hashtags FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND LOWER(text_content) SIMILAR TO \'%({pattern_hash})%\' AND pub_date > '1971-01-01 00:00:00'", ttl="10m")
+        print("size of df ", len(df))
+    elif len(liste_hashtag_emission) == 1 :
+        pattern_hash = f'%{liste_hashtag_emission[0]}%'
+        print("pattern = ", pattern_hash)
+        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date, hashtags FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND LOWER(text_content) LIKE \'{pattern_hash}\' AND pub_date >  '1971-01-01 00:00:00'", ttl="10m")
+        print(len(df))
+    elif len(liste_hashtag_emission) == 0 :
+        df = _conn.query(f"SELECT publication_id, text_content, person_id, pub_date, hashtags FROM public.twitter_post WHERE text_content NOT LIKE \'RT%\' AND pub_date >  '1971-01-01 00:00:00'", ttl="10m")
     df2 = _conn.query('SELECT person_id, screen_name, description FROM public.twitter_account', ttl="10m")
     dict_name = dict(zip(df2.person_id, df2.screen_name))
     dict_desc = dict(zip(df2.person_id, df2.description))
@@ -36,12 +41,17 @@ def connect_twitter(_conn, liste_hashtag):
     df["description"] = df.person_id.map(dict_desc)
 
 
-    #df3 = _conn.query('''SELECT t.publication_id, ta.pub_date FROM public.twitter_post t JOIN public.publications ta ON t.publication_id=ta.id''', ttl="10m")
-    #print('taille df3 ', len(df3))
-    #dict_date = dict(zip(df3.publication_id, df3.pub_date))
-    #df["local_time"] = df.publication_id.map(dict_date.get)
+
     new_column_name = {"publication_id":"id", "text_content":"text", "person_id":"user_id", "pub_date":"local_time"}
-    df =df[["author", "text_content", "pub_date", "publication_id", "person_id", "description"]].rename(columns = new_column_name)
+    if len(liste_hashtag_candidat) > 1 :
+        pattern_hash_candidat = '|'.join(liste_hashtag_candidat)
+        df =df[["author", "text_content", "pub_date", "publication_id", "person_id", "description", "hashtags"]].rename(columns = new_column_name).loc[df.text_content.str.lower().str.contains(pattern_hash_candidat)]
+    elif len(liste_hashtag_candidat) == 1 :
+        pattern_hash_candidat = liste_hashtag_candidat[0]
+        df =df[["author", "text_content", "pub_date", "publication_id", "person_id", "description", "hashtags"]].rename(columns = new_column_name).loc[df.text_content.str.lower().str.contains(pattern_hash_candidat)]
+    else:
+        df =df[["author", "text_content", "pub_date", "publication_id", "person_id", "description", "hashtags"]].rename(columns = new_column_name)
+    
     print('taille df ', len(df))
     return df
     #st.dataframe(data=df)

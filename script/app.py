@@ -62,57 +62,6 @@ def last_quote(df):
         st.session_state.count = len(df) - 1
 
 
-# Fonction pour afficher les "topics disponibles"
-def dic_emission_twit():
-    # dfe = pd.read_csv("data-1718699997549.csv")
-    # dfe = dfe[["collect_filePath"]].drop_duplicates()
-    # dict_emission = {}
-    # for n, x in enumerate(dfe.collect_filePath):
-    #     file = dfe.collect_filePath.iloc[n]
-    #     nom_emission = file.split('/')[-1]
-    #     #print(nom_emission.split('.xls')[0])
-    #     dict_emission[nom_emission.split('.xls')[0]] = x
-    dict_emission = {'2022-04-12-lepen-tf1': 'files/twitter/lePen/2022-04-12-lepen-tf1.xlsx',
- '2022-03-24-zemmour': 'files/twitter/zemmour/2022-03-24-zemmour.xlsx',
- '2022-03-23-roussel': 'files/twitter/roussel/2022-03-23-roussel.xlsx',
- '2022-04-06-melenchon': 'files/twitter/melenchon/2022-04-06-melenchon.xlsx',
- '2022-03-23-pecresse': 'files/twitter/pecresse/2022-03-23-pecresse.xlsx',
- '2022-04-01-lassalle': 'files/twitter/lassalle/2022-04-01-lassalle.xlsx',
- '2022-04-15-lepen': 'files/twitter/lePen/2022-04-15-lepen.xlsx',
- '2022-02-15-pecresse': 'files/twitter/pecresse/2022-02-15-pecresse.xlsx',
- '2022-03-07-faceauxfrancaises': 'files/twitter/2022-03-07-faceauxfrancaises.xlsx',
- '2022-03-28-grandoral': 'files/twitter/2022-03-28-grandoral.xlsx',
- '#zemmourvsmelenchon-#faceababa-2022-01-27': 'files/twitter/#zemmourvsmelenchon-#faceababa-2022-01-27.xlsx',
- '2022-03-24-elysee': 'files/twitter/2022-03-24-elysee.xlsx',
- 'tweets': 'files/twitter/roussel/tweets.xlsx',
- '2022-04-04-zemmour': 'files/twitter/zemmour/2022-04-04-zemmour.xlsx',
- '2022-04-03-poutou10mn': 'files/twitter/poutou/2022-04-03-poutou10mn.xlsx',
- '2022-04-06-lepen': 'files/twitter/lePen/2022-04-06-lepen.xlsx',
- '2022-04-07-dupont-aignan': 'files/twitter/dupontAignan/2022-04-07-dupont-aignan.xlsx',
- '2022-03-24-melenchon': 'files/twitter/melenchon/2022-03-24-melenchon.xlsx',
- '2022-03-21-roussel': 'files/twitter/roussel/2022-03-21-roussel.xlsx',
- '2022-04-06-zemmour': 'files/twitter/zemmour/2022-04-06-zemmour.xlsx',
- '2022-04-08-pecresse-tf1': 'files/twitter/pecresse/2022-04-08-pecresse-tf1.xlsx',
- '2022-03-03-lepen': 'files/twitter/lePen/2022-03-03-lepen.xlsx',
- '2022-04-13-macron': 'files/twitter/macron/2022-04-13-macron.xlsx',
- '2022-02-20-zemmour': 'files/twitter/zemmour/2022-02-20-zemmour.xlsx',
- '2022-03-31-dupont-aignan': 'files/twitter/dupontAignan/2022-03-31-dupont-aignan.xlsx',
- '2022-02-17-jadot': 'files/twitter/jadot/2022-02-17-jadot.xlsx',
- '2022-02-20-lepen': 'files/twitter/lePen/2022-02-20-lepen.xlsx',
- '2022-03-29-comptearebours': 'files/twitter/2022-03-29-comptearebours.xlsx',
- '2022-04-04-jadot': 'files/twitter/jadot/2022-04-04-jadot.xlsx',
- '2022-03-25-melenchon': 'files/twitter/melenchon/2022-03-25-melenchon.xlsx',
- '2022-03-17-jadot': 'files/twitter/jadot/2022-03-17-jadot.xlsx',
- '2022-04-06-macron': 'files/twitter/macron/2022-04-06-macron.xlsx',
- '2022-04-03-poutou': 'files/twitter/poutou/2022-04-03-poutou.xlsx',
- '2022-04-18-lepen': 'files/twitter/lePen/2022-04-18-lepen.xlsx',
- '2022-03-22-jadot': 'files/twitter/jadot/2022-03-22-jadot.xlsx',
- '2022-02-22-pecresse': 'files/twitter/pecresse/2022-02-22-pecresse.xlsx',
- '2022-03-16-pecresse': 'files/twitter/pecresse/2022-03-16-pecresse.xlsx'}
-
-
-    return dict_emission
-
 
 
 
@@ -192,7 +141,7 @@ def convert_df(df):
     # IMPORTANT: Cache the conversion to prevent computation on every rerun
     return df.to_csv(index=False).encode('utf-8')
 
-#@st.cache_resource
+@st.cache_resource
 def init_connection():
     return st.connection("postgresql", type="sql")
 
@@ -280,35 +229,62 @@ else:
     #if ask_bdd :
         # Initialize connection.
 
+    liste_hashtag_emission = []
+
 
     if len(nom_emission3 )> 0:
         dfe = dfe.loc[dfe["Publication Title"].isin(nom_emission3)]
+        print(dfe.hashtag_emission)
+        for x in dfe.hashtag_emission.loc[~dfe.hashtag_emission.isna()]:
+            print('liste hash origin : ', x)
+            split_hash = x.lower().split("|")
+            for hash in split_hash:
+                if hash.lower() not in liste_hashtag_emission:
+                    liste_hashtag_emission.append(hash.lower())
+                else:
+                    pass
     else:
         pass
-    print(len(nom_candidat))
+    
+
+
+    liste_hashtag_candidat = []
     if len(nom_candidat)== 1:
         dfe = dfe.loc[dfe["Guest"].str.contains(nom_candidat[0], na=False)]
+        for x in dfe.hashtag_candidat.loc[~dfe.hashtag_candidat.isna()]:
+            print('liste hash origin : ', x)
+            split_hash = x.lower().split("|")
+            for hash in split_hash:
+                if hash.lower() not in liste_hashtag_candidat:
+                    liste_hashtag_candidat.append(hash.lower())
+                else:
+                    pass
     elif len(nom_candidat)> 1:
         dfe = dfe.loc[dfe["Guest"].str.contains('|'.join(nom_candidat), na=False)]
+        for x in dfe.hashtag_candidat.loc[~dfe.hashtag_candidat.isna()]:
+            print('liste hash origin : ', x)
+            split_hash = x.lower().split("|")
+            for hash in split_hash:
+                if hash.lower() not in liste_hashtag_candidat:
+                    liste_hashtag_candidat.append(hash.lower())
+                else:
+                    pass
     else:
         pass
 
     
+    print("Liste emission : ", liste_hashtag_emission)
+    print("Liste candidat : ", liste_hashtag_candidat)
+    
+    
 
-    liste_hashtag = []
-    for x in dfe.hashtag.loc[~dfe.hashtag.isna()]:
-        split_hash = x.split("|")
-        for hash in split_hash:
-            if hash not in liste_hashtag:
-                liste_hashtag.append(hash)
-            else:
-                pass
-    print(liste_hashtag)
+    
+    
+    
 
     _conn = init_connection()
 
 
-    #plateform = st.sidebar.selectbox("Quelle(s) plateforme(s) vous intéresse ?",("Twitch", "Twitter", "Youtube"))
 
 # Perform query.
     if plateform == "Twitch":
@@ -350,7 +326,7 @@ else:
 
 
     elif plateform == "Twitter":
-        df0 = psql_to_stream.connect_twitter(_conn, liste_hashtag)
+        df0 = psql_to_stream.connect_twitter(_conn, liste_hashtag_emission, liste_hashtag_candidat)
         if len(df0) > 0:
             df = gp.df_processor(data=df0, source = "Twitter")
             nb_row = len(df)
@@ -447,6 +423,7 @@ if st.session_state.dataframe == 1:
         with placeholder.container():
             df = df.drop_duplicates(subset=["author", "text", "date"])
             st.write("Nombre de textes: ", len(df))
+            print(df.columns)
             visualisation.display_dataframe(data=df)
             fig = visualisation.tracer_graphique(data=df, d = "Jour")
             timeserie = st.pyplot(fig)
