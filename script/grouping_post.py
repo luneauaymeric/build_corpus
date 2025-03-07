@@ -65,6 +65,7 @@ def group_by_user_by_minute(data, number, minute_interval):
     list_text=[]
     list_min_date=[]
     list_max_date=[]
+    list_local_time = []
     for n, user in enumerate(data.author.unique()):
         print(user)
         dtemp = data.loc[data["author"]==user]
@@ -90,6 +91,8 @@ def group_by_user_by_minute(data, number, minute_interval):
             list_min_date.append(min_date)
             list_max_date.append(max_date)
             dtemp = dtemp.loc[(dtemp["local_time"]>= first_tweet+timedelta(minutes = int(minute_interval)))]
+            
+
             compteur += len(dtemp1)
 
     dict_data = {"author": list_user, "text":list_text, "min_date": list_min_date, "max_date":list_max_date}

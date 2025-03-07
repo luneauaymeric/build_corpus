@@ -62,7 +62,7 @@ def display_dataframe(data):
     try:
         data = data[["author", "text", "local_time", "source","Publication Title","Guest"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
     except:
-         data = data[["author", "text", "local_time", "source"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
+         data = data[["author", "text", "local_time", "source", "hashtags"]].sort_values("local_time",ascending=True).reset_index().drop(columns=["index"])
     st.dataframe(data)
 
 
@@ -98,6 +98,10 @@ def display_quote1(data):
         pass
     if "Guest" in data.columns:
         st.write('__Candidat.e:__', data['Guest'].iloc[index])
+    else:
+        pass
+    if "hashtags" in data.columns:
+        st.write('__Hashtags:__', data['hashtags'].iloc[index])
     else:
         pass
     st.write(data.text.iloc[index])
