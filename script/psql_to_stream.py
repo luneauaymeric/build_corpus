@@ -30,7 +30,7 @@ def connect_amulex(_conn, search_phrase, plateform):
         
         elif plateform == "youtube":
             df2 = _conn.query(f"SELECT name, person_id  FROM public.youtube_account" , ttl="10m")
-            df = df;merge(df2, on = ["person_id"], how = "left")
+            df = df.merge(df2, on = ["person_id"], how = "left")
             dfe = dfe.loc[~dfe["list_youtube_id"].isna()]
             dfe["youtube_id"] = dfe["list_youtube_id"].str.split("|")
             dfexplode = dfe.explode("youtube_id")
