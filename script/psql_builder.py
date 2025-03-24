@@ -31,9 +31,9 @@ def type_of_column(data, filtre, plateform, table, _conn):
             operator = st.radio("Select an operator: ", options=["contains", "does not contain"])
             id_emission = [x for x in dfet.twitch_id.loc[dfet["Publication Title"].isin(search_in_column)]]
             if operator == "contains":
-                search_phrase = f"SELECT * FROM public.twitch_comment t JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id IN {tuple(id_emission)}"
+                search_phrase = f"SELECT * FROM public.twitch_comment WHERE pub_reference_id IN {tuple(id_emission)}"
             elif operator == "does not contain":
-                search_phrase = f"SELECT * FROM public.twitch_comment t JOIN public.person ta ON t.person_id = ta.id WHERE t.pub_reference_id NOT IN {tuple(id_emission)}"
+                search_phrase = f"SELECT * FROM public.twitch_comment WHERE pub_reference_id NOT IN {tuple(id_emission)}"
 
         elif plateform == "youtube":
             dfy = dfe.loc[~dfe["list_youtube_id"].isna()]
@@ -50,10 +50,10 @@ def type_of_column(data, filtre, plateform, table, _conn):
 
             id_emission = [x for x in dfyxplode.youtube_id.loc[dfyxplode["Publication Title"].isin(search_in_column)]]
             if operator == "contains":
-                search_phrase = f"SELECT * FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id IN {tuple(id_emission)}"
+                search_phrase = f"SELECT * FROM public.youtube_comment WHERE publication_id IN {tuple(id_emission)}"
 
             elif operator == "does not contain":
-                search_phrase = f"SELECT * FROM public.youtube_comment t JOIN public.youtube_account ta ON t.person_id = ta.person_id WHERE t.publication_id NOT IN {tuple(id_emission)}"
+                search_phrase = f"SELECT * FROM public.youtube_comment WHERE publication_id NOT IN {tuple(id_emission)}"
 
 
 
