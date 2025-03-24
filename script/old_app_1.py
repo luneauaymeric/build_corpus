@@ -1,38 +1,37 @@
-
-import os
-import requests
-
-import io
-from io import StringIO
-
 import streamlit as st
 import pandas as pd
+import io
 import matplotlib.pyplot as plt
-
 from datetime import datetime, timedelta
-import re
-
-import zipfile
-import emoji
-
-
-
-
-## intern module (module construit pour l'application)
-import emission_dictionary
-
 import grouping_post as gp
 import visualisation
 import convert
-
+import zipfile
 import cleaning
 from cleaning import Cleaner
-
-import psql_builder
+import emoji
 import psql_to_stream
+import requests
+from io import StringIO
+import re
+import os
+#import streamlit as st
+#from tkinter import filedialog
+#import glob
+
+# Script inspired from https://github.com/emilienschultz/dstool
 
 
-###########
+### Définition des fonctions
+
+
+# def display_quote():
+#     quote = st.session_state.quotes[st.session_state.count]
+#     st.write(quote)
+
+# def display_quote_df(df):
+#     quote = df.text.iloc[st.session_state.count]
+#     st.write(quote)
 
 def next_quote(df):
     print("next : ", st.session_state.count)
@@ -66,7 +65,33 @@ def last_quote(df):
 
 
 
+def dic_emission_twitch():
+    url = 'https://raw.githubusercontent.com/luneauaymeric/build_corpus/main/script/liste_emission.csv'
+    response = requests.get(url)
+    if response.status_code == 200:
+        dfe = pd.read_csv(StringIO(response.text))
+        dict_emission = dict(zip(dfe.emission_title, dfe.twitch_id))
+        return dict_emission
+        #return pd.read_csv(StringIO(response.text))
+    else:
+        st.error("Failed to load data from GitHub.")
+        return None
 
+def dic_emission(dfe):
+    #dfe = pd.read_csv("liste_emission.csv")
+    dict_emission = dict(zip(dfe.emission_title, dfe.twitch_id))
+    dfc= dfe[["Publication Title"]].drop_duplicates()
+    list_channel = [x for x in dfc["Publication Title"]]
+    dfg = dfe[["Guest"]].drop_duplicates()
+    dfg["Guest2"] = dfg["Guest"].str.split(";")
+    dfg = dfg["Guest2"].explode()
+    list_candidat = []
+    for x in dfg.drop_duplicates():
+        x_nom = x.split(",")[0].strip()
+        if x_nom not in list_candidat:
+            list_candidat.append(x_nom)
+
+    return dict_emission, list_candidat, list_channel
 
 
 def topics(data,topic_column):
@@ -121,7 +146,8 @@ def init_connection():
     return st.connection("postgresql", type="sql")
 
 
-
+def rebase_count():
+    st.session_state.count = 0
 
 if 'count' not in st.session_state:
     st.session_state.count = 0
@@ -151,7 +177,7 @@ with tab3:
 
 
 #  Chargement du CSV contenant les tweets (un seul fichier à la fois)
-st.session_state.result_requests = 0
+st.session_state.dataframe = 0
 st.session_state.corpus = False
 st.sidebar.title("Mes données d'origine")
 bdd = st.sidebar.radio(
@@ -176,8 +202,7 @@ if bdd == "Un fichier CSV":
         df0 = df0.rename(columns={column_author:"author"})
 
         df = gp.df_processor(data=df0, source = source)
-        st.session_state.result_requests = 1
-        st.session_state.dataframe = df
+        st.session_state.dataframe = 1
 
 
 
@@ -189,29 +214,152 @@ else:
 
     dfe = read_dfemission()
 
+    st.sidebar.divider()
+    dic_emission, list_candidat, list_channel = dic_emission(dfe)
+    st.sidebar.markdown("## Requête vers la base de données")
+    st.sidebar.info("Les variables ci-dessous permettent d'obtenir un tableau correspondant aux options choisies.", icon="ℹ️")
+    plateform = st.sidebar.selectbox("Choix de la plateforme", ("Twitch", "Twitter","Youtube"), on_change=rebase_count)
+    #platform2 = st.multiselect("Quelle plateforme vous intéresse ?", ["Twitch", "Twitter", "Youtube"])
+    #nom_emission2 = st.selectbox("Quelle(s) émission(s)", [x for x in dic_emission])
+    nom_emission3 = st.sidebar.multiselect("Choix de la ou des émission(s)", [x for x in list_channel],on_change=rebase_count)
+    nom_candidat = st.sidebar.multiselect("Choix d'un.e ou de plusieurs candidat.es", [x for x in list_candidat], on_change=rebase_count)
+    #ask_bdd = st.sidebar.button("Envoyer la requête")
+
+
+    #if ask_bdd :
+        # Initialize connection.
+
+    liste_hashtag_emission = []
+
+
+    if len(nom_emission3 )> 0:
+        dfe = dfe.loc[dfe["Publication Title"].isin(nom_emission3)]
+        print(dfe.hashtag_emission)
+        for x in dfe.hashtag_emission.loc[~dfe.hashtag_emission.isna()]:
+            print('liste hash origin : ', x)
+            split_hash = x.lower().split("|")
+            for hash in split_hash:
+                if hash.lower() not in liste_hashtag_emission:
+                    liste_hashtag_emission.append(hash.lower())
+                else:
+                    pass
+    else:
+        pass
+    
+
+
+    liste_hashtag_candidat = []
+    if len(nom_candidat)== 1:
+        dfe = dfe.loc[dfe["Guest"].str.contains(nom_candidat[0], na=False)]
+        for x in dfe.hashtag_candidat.loc[~dfe.hashtag_candidat.isna()]:
+            print('liste hash origin : ', x)
+            split_hash = x.lower().split("|")
+            for hash in split_hash:
+                if hash.lower() not in liste_hashtag_candidat:
+                    liste_hashtag_candidat.append(hash.lower())
+                else:
+                    pass
+    elif len(nom_candidat)> 1:
+        dfe = dfe.loc[dfe["Guest"].str.contains('|'.join(nom_candidat), na=False)]
+        for x in dfe.hashtag_candidat.loc[~dfe.hashtag_candidat.isna()]:
+            print('liste hash origin : ', x)
+            split_hash = x.lower().split("|")
+            for hash in split_hash:
+                if hash.lower() not in liste_hashtag_candidat:
+                    liste_hashtag_candidat.append(hash.lower())
+                else:
+                    pass
+    else:
+        pass
+
+    
+    print("Liste emission : ", liste_hashtag_emission)
+    print("Liste candidat : ", liste_hashtag_candidat)
+    
+    
+
+    
+    
+    
+
     _conn = init_connection()
 
-    if st.sidebar.button("construire une requête"):
-        #_conn = init_connection()
-        requete = psql_builder.psql_builder(_conn=_conn)
-        psql_builder.rebase_count()
 
-       
-    
-    #st.code(st.session_state.build_requete['item'], language="sql")
 
-    if "build_requete" in st.session_state:
-        df = psql_to_stream.connect_amulex(_conn, search_phrase = st.session_state.build_requete['item'], plateform = st.session_state.build_requete['plateform'])
+# Perform query.
+    if plateform == "Twitch":
+        list_publi_id = [x for x in dfe.twitch_id.loc[~dfe["twitch_id"].isna()]]
+        print(list_publi_id)
+        df0 = psql_to_stream.connect_twitch(_conn, list_publi_id)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Twitch")
+            dict_channel = dict(zip(dfe.twitch_id, dfe["Publication Title"]))
+            df["twitch_id"] = df.twitch_id.astype("str")
+            df = df.merge(dfe[["twitch_id", "Guest", "Publication Title"]], on = ["twitch_id"], how="left")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
+
+    elif plateform == "Youtube":
+        dfe = dfe.loc[~dfe["list_youtube_id"].isna()]
+        dfe["list_youtube_id"] = dfe["list_youtube_id"].str.split("|")
+        dfexplode = dfe.explode("list_youtube_id")
+        list_publi_id = [x for x in dfexplode.list_youtube_id]
+
+        print('dfeexplode', len(dfexplode), dfexplode.columns)
+        print("Test : ", list_publi_id)
         
-        st.session_state.requete = True
+        
+        df0 = psql_to_stream.connect_youtube(_conn, list_publi_id)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Youtube")
+            #df = df.merge(dfe[["twitch_id", "Guest", "Publication Title"]], on = ["twitch_id"], how="left")
+            nb_row = len(df)
+            print(df.columns)
+            df["publication_id"] = df.publication_id.astype("str")
+            df = df.merge(dfexplode[["list_youtube_id", "Publication Title", "Publisher", "Guest"]].rename(columns={"list_youtube_id":"publication_id"}), on = ["publication_id"], how='left')
+        else:
+            nb_row= 0
+        
+
+
+
+    elif plateform == "Twitter":
+        df0 = psql_to_stream.connect_twitter(_conn, liste_hashtag_emission, liste_hashtag_candidat)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Twitter")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
+    elif plateform == "Instagram":
+        df0 = psql_to_stream.connect_instagram(_conn, liste_hashtag)
+        if len(df0) > 0:
+            df = gp.df_processor(data=df0, source = "Instagram")
+            nb_row = len(df)
+        else:
+            nb_row= 0
+
+    st.session_state.requete = True
+    if nb_row > 0 :
+        st.session_state.dataframe = 1
+    elif nb_row == 0:
+        st.session_state.dataframe = -1
+
+
+
+#st.sidebar.write(st.session_state)
 
 
 
 
 
-if st.session_state.result_requests == 1:
 
+if st.session_state.dataframe == 1:
 
+    #if 'quotes' not in st.session_state:
+        #st.session_state.quotes = [x for x in df.text]
 
     st.sidebar.divider()
     st.sidebar.markdown("## Regrouper les posts")
@@ -220,7 +368,7 @@ if st.session_state.result_requests == 1:
     minute_interval = st.sidebar.number_input("Définir l'intervale de temps (en minute)",value=0, key ="nombre_minute") #on concatène tous les textes publiés dans cet intervale
 
     if st.session_state.nombre_mot > 0 or st.session_state.nombre_minute > 0:
-        new_df = st.session_state.dataframe.loc[~(st.session_state.dataframe["text"].isna())]
+        new_df = df.loc[~(df["text"].isna())]
         if number+minute_interval>0:
             df = gp.group_by_user_by_minute(new_df, number, minute_interval)
             print(new_df.columns)
@@ -229,24 +377,33 @@ if st.session_state.result_requests == 1:
 
 
 
+    #new_df= df.copy()
+    #new_df = new_df.loc[~(new_df["text"].isna())]
+
+    #st.sidebar.write('You selected `%s`' % filename)
+
     st.sidebar.divider()
 
     ### Option pour le regoupement
 
-   
+    #submit = st.form_submit_button("Regrouper les posts")
+
 
     name = st.sidebar.selectbox("auteur", ["author"])
+    #narrateur = st.selectbox("narrateur", [""])
+    #destinataire = st.selectbox("destinataire", list_col_name)
 
-    observation = st.sidebar.selectbox("observation", [x for x in st.session_state.dataframe.columns])
+    #nom_support = st.text_input("Nom de l'émission", value="Tapez le nom de l'émission")
+    observation = st.sidebar.selectbox("observation", [x for x in df.columns])
     folder_path = st.sidebar.text_input("Coller l'adresse du dossier de récupération")
-    dictionnary_path = st.sidebar.text_input("Coller l'adresse des dictionnaires")
     st.sidebar.info("L\'adresse ci-dessus est utilisée pour créer le prc.", icon="ℹ️")
 
     submit = st.sidebar.button("Créer le corpus")
     if submit :
 
         convert_csv_to_txt = convert.ParseCsv.write_prospero_files(df, save_dir=folder_path, observation= observation)
-   
+        #create_prc
+        #print("OK", plateform)
         st.sidebar.download_button(
             "Download corpus",
             #on_click = zipfile_creator(),
@@ -264,16 +421,12 @@ if st.session_state.result_requests == 1:
         container = st.container()
 
         with placeholder.container():
-
-            
-            st.code(st.session_state.build_requete['item'], language="sql")
-            st.divider()
-            df = st.session_state.dataframe.drop_duplicates(subset=["author", "text", "date"])
+            df = df.drop_duplicates(subset=["author", "text", "date"])
             st.write("Nombre de textes: ", len(df))
             print(df.columns)
             visualisation.display_dataframe(data=df)
-            #fig = visualisation.tracer_graphique(data=df, d = "Jour")
-            #timeserie = st.pyplot(fig)
+            fig = visualisation.tracer_graphique(data=df, d = "Jour")
+            timeserie = st.pyplot(fig)
 
                 #st.session_state.corpus = True
 
@@ -281,12 +434,19 @@ if st.session_state.result_requests == 1:
 
 
 
+    # with tab2 :
+    #     placeholder2 = st.empty()
+    #     container2 = st.container()
+    #     with placeholder2.container():
+    #         #show_text = visualisation.display_text(data=df)
+    #         show_text = visualisation.display_text(data=df)
 
     with tab3 :
         placeholder3 = st.empty()
         container3 = st.container()
         with placeholder3.container():
-            visualisation.display_quote1(st.session_state.dataframe)
+            #show_text = visualisation.display_text(data=df)
+            visualisation.display_quote1(df)
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
@@ -315,7 +475,7 @@ if st.session_state.result_requests == 1:
 
 
 
-elif st.session_state.result_requests == 0 :
+elif st.session_state.dataframe == 0 :
     with tab1 :
         placeholder = st.empty()
         container = st.container()
@@ -354,7 +514,7 @@ elif st.session_state.result_requests == 0 :
                 """
             )
 
-elif st.session_state.result_requests == -1 :
+elif st.session_state.dataframe == -1 :
     with tab1 :
         placeholder = st.empty()
         container = st.container()
